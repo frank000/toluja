@@ -1,0 +1,23 @@
+<div class="row justify-content-center mt-5">
+  <div class="col-12 col-md-5 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h4 class="mb-3">Entrar</h4>
+        <form [formGroup]="form" (ngSubmit)="submit()" class="d-grid gap-3">
+          <div>
+            <label class="form-label">Usuário</label>
+            <input class="form-control" type="text" formControlName="username" />
+          </div>
+          <div>
+            <label class="form-label">Senha</label>
+            <input class="form-control" type="password" formControlName="password" />
+          </div>
+          <button class="btn btn-primary" type="submit" [disabled]="loading">
+            {{ loading ? 'Entrando...' : 'Entrar' }}
+          </button>
+        </form>
+        <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+      </div>
+    </div>
+  </div>
+</div>

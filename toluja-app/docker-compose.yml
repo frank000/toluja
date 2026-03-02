@@ -1,0 +1,32 @@
+services:
+  db:
+    image: alpine:3.20
+    container_name: toluja-db
+    command: sh -c "mkdir -p /data && touch /data/pedido.db && tail -f /dev/null"
+    volumes:
+      - db_data:/data
+
+  backend:
+    build:
+      context: ./backend
+    container_name: toluja-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:sqlite:/app/data/pedido.db
+    volumes:
+      - db_data:/app/data
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: toluja-frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  db_data:
