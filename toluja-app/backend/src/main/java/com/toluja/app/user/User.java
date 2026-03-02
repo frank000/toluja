@@ -1,6 +1,8 @@
 package com.toluja.app.user;
 
+import com.toluja.app.common.BooleanToIntegerConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,9 +33,11 @@ public class User {
     @Column(nullable = false, length = 20)
     private String role;
 
+    @Convert(converter = BooleanToIntegerConverter.class)
     @Column(nullable = false)
     private Boolean ativo;
 
+    @Convert(converter = BooleanToIntegerConverter.class)
     @Column(name = "deve_trocar_senha", nullable = false)
     private Boolean deveTrocarSenha;
 }
