@@ -128,3 +128,31 @@ Aplicação disponível em `http://localhost:4200`.
 - `POST /api/pedidos`
 
 CORS configurado para `http://localhost:4200`.
+
+
+## Docker (front + back + db)
+
+Para subir tudo de uma vez (frontend, backend e volume de banco SQLite):
+
+```bash
+cd toluja-app
+docker compose up --build
+```
+
+Serviços:
+
+- Frontend: `http://localhost:4200`
+- Backend: `http://localhost:8080`
+- DB (volume SQLite): serviço `db` mantendo o arquivo `pedido.db` em volume Docker `db_data`.
+
+Para parar:
+
+```bash
+docker compose down
+```
+
+Para apagar também o volume do banco:
+
+```bash
+docker compose down -v
+```
