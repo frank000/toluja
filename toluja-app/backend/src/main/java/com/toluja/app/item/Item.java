@@ -1,6 +1,8 @@
 package com.toluja.app.item;
 
+import com.toluja.app.common.BooleanToIntegerConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +21,7 @@ public class Item {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false)
     private String nome;
@@ -27,6 +29,7 @@ public class Item {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal preco;
 
+    @Convert(converter = BooleanToIntegerConverter.class)
     @Column(nullable = false)
     private Boolean ativo;
 }
