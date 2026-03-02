@@ -1,0 +1,2 @@
+.cursor-pointer { cursor: pointer; }
+.card:hover { transform: translateY(-1px); transition: all .15s ease-in-out; }

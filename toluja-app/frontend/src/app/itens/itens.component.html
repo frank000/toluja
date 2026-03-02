@@ -1,0 +1,39 @@
+<div class="row g-4">
+  <div class="col-12 col-lg-5" *ngIf="auth.isAdmin()">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Cadastrar Item</h5>
+        <form [formGroup]="form" (ngSubmit)="cadastrar()" class="d-grid gap-3">
+          <input class="form-control" formControlName="nome" placeholder="Nome do item" />
+          <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </form>
+        <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12" [class.col-lg-7]="auth.isAdmin()">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Itens cadastrados</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th class="text-end">Preço</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of itens">
+                <td>{{ item.nome }}</td>
+                <td class="text-end">R$ {{ item.preco | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
