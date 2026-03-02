@@ -8,5 +8,5 @@ import java.math.BigDecimal;
 
 public class ItemDtos {
     public record ItemRequest(@NotBlank String nome, @NotNull @DecimalMin("0.01") BigDecimal preco) {}
-    public record ItemResponse(Long id, String nome, BigDecimal preco, Boolean ativo) {}
+    public record ItemResponse(Integer id, String nome, BigDecimal preco, Boolean ativo) {}
 }
