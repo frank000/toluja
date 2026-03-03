@@ -25,6 +25,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/toluja
       SPRING_DATASOURCE_USERNAME: toluja
       SPRING_DATASOURCE_PASSWORD: toluja
+      PRINTERS_MODE: agent
+      PRINTERS_PRINTER1: IMPRESSORA1
+      PRINTERS_PRINTER2: IMPRESSORA2
+      PRINTERS_PRINTER3: IMPRESSORA3
+      PRINTERS_AGENT_STORE_ID: store-001
+      PRINTERS_AGENT_DEVICE_ID: agent-store-001
     depends_on:
       db:
         condition: service_healthy
