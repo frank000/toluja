@@ -12,7 +12,8 @@ public class SuperadminDtos {
             @NotBlank @Size(max = 120) String nome
     ) {}
 
-    public record TenantResponse(Integer id, String tenantId, String nome, Boolean ativo) {}
+    public record TenantResponse(Integer id, String tenantId, String nome, Boolean ativo, Boolean hasPrintKey) {}
+    public record CreateTenantResponse(Integer id, String tenantId, String nome, Boolean ativo, Boolean hasPrintKey, String printKey) {}
 
     public record CreateUserRequest(
             @NotBlank @Size(max = 64) String tenantId,

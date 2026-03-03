@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/tenants").permitAll()
+                        .requestMatchers("/api/print-agent/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/change-password").authenticated()
                         .requestMatchers("/api/superadmin/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/itens").hasRole("ADMIN")

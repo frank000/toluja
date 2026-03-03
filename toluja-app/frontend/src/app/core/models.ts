@@ -17,6 +17,15 @@ export interface TenantSummary {
   nome: string;
 }
 
+export interface CreatedTenant {
+  id: number;
+  tenantId: string;
+  nome: string;
+  ativo: boolean;
+  hasPrintKey: boolean;
+  printKey: string;
+}
+
 export interface Item {
   id: number;
   nome: string;

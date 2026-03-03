@@ -19,6 +19,8 @@ export class SuperadminPanelComponent implements OnInit {
   tenantError = '';
   userError = '';
   tenantSuccess = '';
+  createdTenantId = '';
+  createdTenantPrintKey = '';
   userSuccess = '';
 
   tenantForm = this.fb.group({
@@ -62,12 +64,16 @@ export class SuperadminPanelComponent implements OnInit {
     this.savingTenant = true;
     this.tenantError = '';
     this.tenantSuccess = '';
+    this.createdTenantId = '';
+    this.createdTenantPrintKey = '';
     const { tenantId, nome } = this.tenantForm.getRawValue();
 
     this.api.criarTenant(tenantId!, nome!).subscribe({
-      next: () => {
+      next: (createdTenant) => {
         this.savingTenant = false;
-        this.tenantSuccess = 'Tenant cadastrado com sucesso.';
+        this.tenantSuccess = 'Tenant cadastrado com sucesso. Guarde a print key e envie ao cliente.';
+        this.createdTenantId = createdTenant.tenantId;
+        this.createdTenantPrintKey = createdTenant.printKey;
         this.tenantForm.reset();
         this.carregarTenants();
       },
