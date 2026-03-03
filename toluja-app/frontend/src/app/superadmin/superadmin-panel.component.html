@@ -26,6 +26,11 @@
           </form>
           <div class="alert alert-danger mt-3 mb-0" *ngIf="tenantError">{{ tenantError }}</div>
           <div class="alert alert-success mt-3 mb-0" *ngIf="tenantSuccess">{{ tenantSuccess }}</div>
+          <div class="alert alert-warning mt-3 mb-0" *ngIf="createdTenantPrintKey">
+            <div class="fw-semibold mb-2">Print key do tenant {{ createdTenantId }}</div>
+            <input class="form-control mb-2" type="text" [value]="createdTenantPrintKey" readonly />
+            <div class="small">Configure no agente do cliente: <code>PRINT_KEY={{ createdTenantPrintKey }}</code></div>
+          </div>
         </div>
       </div>
     </div>

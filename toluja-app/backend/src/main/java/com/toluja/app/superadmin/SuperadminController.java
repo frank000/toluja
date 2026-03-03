@@ -26,8 +26,8 @@ public class SuperadminController {
     }
 
     @PostMapping("/tenants")
-    public SuperadminDtos.TenantResponse criarTenant(@Valid @RequestBody SuperadminDtos.CreateTenantRequest request,
-                                                      Authentication authentication) {
+    public SuperadminDtos.CreateTenantResponse criarTenant(@Valid @RequestBody SuperadminDtos.CreateTenantRequest request,
+                                                           Authentication authentication) {
         service.ensureSuperadmin(authentication);
         return service.criarTenant(request);
     }

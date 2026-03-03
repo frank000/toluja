@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Item, NovoItem, Pedido, PedidoItem, SubitemCategoria, TenantSummary } from './models';
+import { CreatedTenant, Item, NovoItem, Pedido, PedidoItem, SubitemCategoria, TenantSummary } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -51,7 +51,7 @@ export class ApiService {
   }
 
   criarTenant(tenantId: string, nome: string) {
-    return this.http.post<TenantSummary>('/api/superadmin/tenants', { tenantId, nome });
+    return this.http.post<CreatedTenant>('/api/superadmin/tenants', { tenantId, nome });
   }
 
   criarUsuarioPainel(payload: {

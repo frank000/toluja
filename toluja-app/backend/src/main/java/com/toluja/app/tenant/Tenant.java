@@ -27,6 +27,9 @@ public class Tenant {
     @Column(nullable = false, length = 120)
     private String nome;
 
+    @Column(name = "print_key_hash", nullable = false, length = 64)
+    private String printKeyHash;
+
     @Convert(converter = BooleanToIntegerConverter.class)
     @Column(nullable = false)
     private Boolean ativo;

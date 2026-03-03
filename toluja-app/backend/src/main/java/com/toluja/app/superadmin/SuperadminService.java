@@ -1,6 +1,7 @@
 package com.toluja.app.superadmin;
 
 import com.toluja.app.dto.SuperadminDtos;
+import com.toluja.app.tenant.PrintKeyService;
 import com.toluja.app.tenant.Tenant;
 import com.toluja.app.tenant.TenantRepository;
 import com.toluja.app.user.User;
@@ -19,6 +20,7 @@ import java.util.List;
 public class SuperadminService {
 
     private final TenantRepository tenantRepository;
+    private final PrintKeyService printKeyService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -36,23 +38,39 @@ public class SuperadminService {
 
     public List<SuperadminDtos.TenantResponse> listarTenants() {
         return tenantRepository.findByAtivoTrueOrderByTenantIdAsc().stream()
-                .map(t -> new SuperadminDtos.TenantResponse(t.getId(), t.getTenantId(), t.getNome(), t.getAtivo()))
+                .map(t -> new SuperadminDtos.TenantResponse(
+                        t.getId(),
+                        t.getTenantId(),
+                        t.getNome(),
+                        t.getAtivo(),
+                        t.getPrintKeyHash() != null && !t.getPrintKeyHash().isBlank()
+                ))
                 .toList();
     }
 
-    public SuperadminDtos.TenantResponse criarTenant(SuperadminDtos.CreateTenantRequest request) {
+    public SuperadminDtos.CreateTenantResponse criarTenant(SuperadminDtos.CreateTenantRequest request) {
         String tenantId = normalizarTenantId(request.tenantId());
         if (tenantRepository.existsByTenantId(tenantId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tenant já cadastrado");
         }
+        String printKey = generateUniquePrintKey();
+        String printKeyHash = printKeyService.hash(printKey);
 
         Tenant tenant = new Tenant();
         tenant.setTenantId(tenantId);
         tenant.setNome(request.nome().trim());
+        tenant.setPrintKeyHash(printKeyHash);
         tenant.setAtivo(true);
         Tenant salvo = tenantRepository.save(tenant);
 
-        return new SuperadminDtos.TenantResponse(salvo.getId(), salvo.getTenantId(), salvo.getNome(), salvo.getAtivo());
+        return new SuperadminDtos.CreateTenantResponse(
+                salvo.getId(),
+                salvo.getTenantId(),
+                salvo.getNome(),
+                salvo.getAtivo(),
+                true,
+                printKey
+        );
     }
 
     public SuperadminDtos.UserResponse criarUsuario(SuperadminDtos.CreateUserRequest request) {
@@ -87,17 +105,35 @@ public class SuperadminService {
     }
 
     public void garantirTenantPadrao() {
-        if (tenantRepository.existsByTenantId("default")) {
+        var existing = tenantRepository.findByTenantId("default");
+        if (existing.isPresent()) {
+            Tenant tenant = existing.get();
+            if (tenant.getPrintKeyHash() == null || tenant.getPrintKeyHash().isBlank()) {
+                tenant.setPrintKeyHash(printKeyService.hash("dev-print-key-default"));
+                tenantRepository.save(tenant);
+            }
             return;
         }
         Tenant tenant = new Tenant();
         tenant.setTenantId("default");
         tenant.setNome("Tenant Padrão");
+        tenant.setPrintKeyHash(printKeyService.hash("dev-print-key-default"));
         tenant.setAtivo(true);
         tenantRepository.save(tenant);
     }
 
     private String normalizarTenantId(String tenantId) {
         return tenantId == null ? "" : tenantId.trim().toLowerCase();
+    }
+
+    private String generateUniquePrintKey() {
+        for (int i = 0; i < 10; i++) {
+            String candidate = printKeyService.generate();
+            String hash = printKeyService.hash(candidate);
+            if (!tenantRepository.existsByPrintKeyHash(hash)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("Falha ao gerar print key única");
     }
 }
