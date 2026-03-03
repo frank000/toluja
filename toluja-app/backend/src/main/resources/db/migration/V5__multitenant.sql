@@ -1,8 +1,8 @@
-ALTER TABLE users ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'default';
-ALTER TABLE items ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'default';
-ALTER TABLE orders ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'default';
-ALTER TABLE subitem_categories ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'default';
-ALTER TABLE subitems ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'default';
+ALTER TABLE users ADD COLUMN tenant_id VARCHAR(64) NOT NULL DEFAULT 'default';
+ALTER TABLE items ADD COLUMN tenant_id VARCHAR(64) NOT NULL DEFAULT 'default';
+ALTER TABLE orders ADD COLUMN tenant_id VARCHAR(64) NOT NULL DEFAULT 'default';
+ALTER TABLE subitem_categories ADD COLUMN tenant_id VARCHAR(64) NOT NULL DEFAULT 'default';
+ALTER TABLE subitems ADD COLUMN tenant_id VARCHAR(64) NOT NULL DEFAULT 'default';
 
 CREATE INDEX IF NOT EXISTS idx_users_tenant_username ON users(tenant_id, username);
 CREATE INDEX IF NOT EXISTS idx_items_tenant_ativo ON items(tenant_id, ativo);

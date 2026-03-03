@@ -1,13 +1,15 @@
 spring:
   datasource:
-    url: jdbc:sqlite:./data/pedido.db
-    driver-class-name: org.sqlite.JDBC
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/toluja}
+    username: ${SPRING_DATASOURCE_USERNAME:toluja}
+    password: ${SPRING_DATASOURCE_PASSWORD:toluja}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.community.dialect.SQLiteDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
   flyway:
     enabled: true

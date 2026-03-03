@@ -5,7 +5,7 @@ Monorepo com frontend Angular e backend Spring Boot para autenticação JWT, ges
 ## Estrutura
 
 - `frontend/`: aplicação Angular (login, itens, pedido e lista de pedidos).
-- `backend/`: API Spring Boot com JWT, Validation, Security, JPA, Flyway e SQLite.
+- `backend/`: API Spring Boot com JWT, Validation, Security, JPA, Flyway e PostgreSQL.
 
 ## Pré-requisitos
 
@@ -23,7 +23,17 @@ mvn spring-boot:run
 
 API disponível em `http://localhost:8080`.
 
-Banco SQLite em arquivo: `backend/data/pedido.db` (`jdbc:sqlite:./data/pedido.db`).
+Banco PostgreSQL padrão:
+
+- URL: `jdbc:postgresql://localhost:5432/toluja`
+- usuário: `toluja`
+- senha: `toluja`
+
+Também é possível sobrescrever por variáveis:
+
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
 
 Schema criado pelo Flyway (`V1__init.sql`) com tabelas:
 
@@ -143,7 +153,7 @@ CORS configurado para `http://localhost:4200`.
 
 ## Docker (front + back + db)
 
-Para subir tudo de uma vez (frontend, backend e volume de banco SQLite):
+Para subir tudo de uma vez (frontend, backend e PostgreSQL):
 
 ```bash
 cd toluja-app
@@ -154,7 +164,7 @@ Serviços:
 
 - Frontend: `http://localhost:4200`
 - Backend: `http://localhost:8080`
-- DB (volume SQLite): serviço `db` mantendo o arquivo `pedido.db` em volume Docker `db_data`.
+- DB (PostgreSQL): serviço `db` em `localhost:5432`, com dados persistidos no volume Docker `db_data`.
 
 Para parar:
 
