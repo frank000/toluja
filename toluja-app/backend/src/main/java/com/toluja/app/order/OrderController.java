@@ -1,6 +1,7 @@
 package com.toluja.app.order;
 
 import com.toluja.app.dto.OrderDtos;
+import com.toluja.app.security.AuthContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -21,11 +22,11 @@ public class OrderController {
 
     @PostMapping
     public OrderDtos.OrderResponse criar(@Valid @RequestBody OrderDtos.CreateOrderRequest request, Authentication authentication) {
-        return service.criar(request, authentication.getName());
+        return service.criar(request, authentication.getName(), AuthContext.tenantId(authentication));
     }
 
     @GetMapping
     public List<OrderDtos.OrderResponse> listar(Authentication authentication) {
-        return service.listar(authentication.getName());
+        return service.listar(authentication.getName(), AuthContext.tenantId(authentication));
     }
 }

@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS tenants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT NOT NULL UNIQUE,
+    nome TEXT NOT NULL,
+    ativo INTEGER NOT NULL DEFAULT 1
+);
+
+INSERT INTO tenants (tenant_id, nome, ativo)
+SELECT 'default', 'Tenant Padrão', 1
+WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'default');

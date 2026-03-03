@@ -26,11 +26,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            if (jwtService.isValid(token)) {
-                String username = jwtService.extractUsername(token);
-                String role = jwtService.extractRole(token);
-                boolean deveTrocarSenha = jwtService.extractDeveTrocarSenha(token);
+                String token = header.substring(7);
+                if (jwtService.isValid(token)) {
+                    String username = jwtService.extractUsername(token);
+                    String tenantId = jwtService.extractTenantId(token);
+                    String role = jwtService.extractRole(token);
+                    boolean deveTrocarSenha = jwtService.extractDeveTrocarSenha(token);
 
                 List<SimpleGrantedAuthority> authorities = new ArrayList<>();
                 if (deveTrocarSenha) {
@@ -40,6 +41,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
 
                 var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
+                auth.setDetails(tenantId);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }

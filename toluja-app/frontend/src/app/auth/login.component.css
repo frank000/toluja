@@ -1,0 +1,93 @@
+.login-page {
+  position: relative;
+  min-height: calc(100vh - 90px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 0.75rem;
+}
+
+.painel-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.login-shell {
+  width: min(980px, 100%);
+  min-height: 560px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.login-logo-panel {
+  background: linear-gradient(145deg, #fff7f0 0%, #f2fbf0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.login-logo {
+  width: min(430px, 92%);
+  height: auto;
+  object-fit: contain;
+}
+
+.login-form-panel {
+  padding: 2.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-submit {
+  min-width: 170px;
+  margin: 0.5rem auto 0;
+}
+
+@media (max-width: 991.98px) {
+  .login-shell {
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .login-logo-panel {
+    display: none;
+  }
+
+  .login-form-panel {
+    position: relative;
+    isolation: isolate;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .login-form-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background-image: url('/assets/logo%20transparente.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: min(82vw, 420px);
+    opacity: 0.2;
+  }
+
+  .login-form-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.86) 0%,
+      rgba(255, 255, 255, 0.92) 100%
+    );
+  }
+}

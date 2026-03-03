@@ -5,13 +5,23 @@ import com.toluja.app.dto.OrderDtos;
 import com.toluja.app.item.Item;
 import com.toluja.app.order.Order;
 import com.toluja.app.order.OrderItem;
+import com.toluja.app.order.OrderItemSubitem;
 import org.springframework.stereotype.Component;
 
 @Component
 public class EntityMapper {
 
     public ItemDtos.ItemResponse toItemResponse(Item item) {
-        return new ItemDtos.ItemResponse(item.getId(), item.getNome(), item.getPreco(), item.getAtivo());
+        var categorias = item.getCategorias().stream().map(this::toSubitemCategoryResponse).toList();
+        return new ItemDtos.ItemResponse(item.getId(), item.getNome(), item.getPreco(), item.getAtivo(), categorias);
+    }
+
+    public ItemDtos.SubitemCategoryResponse toSubitemCategoryResponse(com.toluja.app.item.SubitemCategory categoria) {
+        var subitens = categoria.getSubitens().stream()
+                .filter(subitem -> Boolean.TRUE.equals(subitem.getAtivo()))
+                .map(subitem -> new ItemDtos.SubitemResponse(subitem.getId(), subitem.getNome(), subitem.getPreco()))
+                .toList();
+        return new ItemDtos.SubitemCategoryResponse(categoria.getId(), categoria.getNome(), subitens);
     }
 
     public OrderDtos.OrderResponse toOrderResponse(Order order) {
@@ -21,6 +31,7 @@ public class EntityMapper {
         return new OrderDtos.OrderResponse(
                 order.getId(),
                 order.getCodigo(),
+                order.getSenhaChamada(),
                 order.getCriadoEm(),
                 order.getStatus(),
                 order.getTotal(),
@@ -31,13 +42,25 @@ public class EntityMapper {
     }
 
     public OrderDtos.OrderItemResponse toOrderItemResponse(OrderItem orderItem) {
+        var subitens = orderItem.getSubitens().stream().map(this::toOrderItemSubitemResponse).toList();
         return new OrderDtos.OrderItemResponse(
                 orderItem.getId(),
                 orderItem.getItem().getId(),
                 orderItem.getNomeSnapshot(),
                 orderItem.getPrecoSnapshot(),
                 orderItem.getQuantidade(),
-                orderItem.getSubtotal()
+                orderItem.getSubtotal(),
+                subitens
+        );
+    }
+
+    public OrderDtos.OrderItemSubitemResponse toOrderItemSubitemResponse(OrderItemSubitem orderItemSubitem) {
+        return new OrderDtos.OrderItemSubitemResponse(
+                orderItemSubitem.getId(),
+                orderItemSubitem.getSubitem().getId(),
+                orderItemSubitem.getCategoriaNomeSnapshot(),
+                orderItemSubitem.getNomeSnapshot(),
+                orderItemSubitem.getPrecoSnapshot()
         );
     }
 }

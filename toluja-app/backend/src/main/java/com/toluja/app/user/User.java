@@ -33,6 +33,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private String role;
 
+    @Column(name = "tenant_id", nullable = false, length = 64)
+    private String tenantId;
+
     @Convert(converter = BooleanToIntegerConverter.class)
     @Column(nullable = false)
     private Boolean ativo;

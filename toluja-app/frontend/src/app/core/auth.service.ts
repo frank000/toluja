@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, tap } from 'rxjs';
-import { AuthUser, LoginResponse } from './models';
+import { AuthUser, LoginResponse, TenantSummary } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,8 +15,19 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(username: string, password: string) {
-    return this.http.post<LoginResponse>('/api/auth/login', { username, password }).pipe(
+  login(tenantId: string, username: string, password: string) {
+    return this.http.post<LoginResponse>('/api/auth/login', { tenantId, username, password }).pipe(
+      tap((response) => this.setSession(response.token, response.user)),
+      map(() => void 0)
+    );
+  }
+
+  listarTenantsPublicos() {
+    return this.http.get<TenantSummary[]>('/api/public/tenants');
+  }
+
+  changePassword(senhaAtual: string, novaSenha: string) {
+    return this.http.post<LoginResponse>('/api/auth/change-password', { senhaAtual, novaSenha }).pipe(
       tap((response) => this.setSession(response.token, response.user)),
       map(() => void 0)
     );
@@ -41,8 +52,16 @@ export class AuthService {
     return this.userSignal()?.role === 'ADMIN';
   }
 
+  isSuperadmin(): boolean {
+    return this.userSignal()?.username?.toLowerCase() === 'superadmin';
+  }
+
   isLoggedIn(): boolean {
     return this.logged();
+  }
+
+  mustChangePassword(): boolean {
+    return !!this.userSignal()?.deveTrocarSenha;
   }
 
   logout(): void {

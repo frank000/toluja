@@ -1,39 +1,162 @@
-<div class="row g-4">
-  <div class="col-12 col-lg-5" *ngIf="auth.isAdmin()">
-    <div class="card shadow-sm">
+<div class="alert alert-info" *ngIf="!auth.isAdmin()">
+  Cadastro de categorias e subitens disponível apenas para usuários ADMIN.
+</div>
+
+<div class="row g-4" *ngIf="auth.isAdmin()">
+  <div class="col-12 col-xl-4">
+    <div class="card shadow-sm h-100">
       <div class="card-body">
-        <h5 class="card-title mb-3">Cadastrar Item</h5>
-        <form [formGroup]="form" (ngSubmit)="cadastrar()" class="d-grid gap-3">
-          <input class="form-control" formControlName="nome" placeholder="Nome do item" />
-          <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
-          <button class="btn btn-primary" type="submit">Salvar</button>
+        <h5 class="card-title mb-3">Categoria de subitens</h5>
+        <form [formGroup]="categoriaForm" (ngSubmit)="cadastrarCategoria()" class="d-grid gap-2 mb-4">
+          <input class="form-control" formControlName="nome" placeholder="Ex: Adicionais" />
+          <button class="btn btn-primary" type="submit">Salvar categoria</button>
         </form>
-        <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+
+        <h6 class="mb-2">Novo subitem</h6>
+        <form [formGroup]="subitemForm" (ngSubmit)="cadastrarSubitem()" class="d-grid gap-2">
+          <select class="form-select" formControlName="categoriaId">
+            <option [ngValue]="null">Selecione a categoria</option>
+            <option *ngFor="let categoria of categorias" [ngValue]="categoria.id">{{ categoria.nome }}</option>
+          </select>
+          <input class="form-control" formControlName="nome" placeholder="Ex: Queijo" />
+          <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
+          <button class="btn btn-outline-primary" type="submit">Salvar subitem</button>
+        </form>
       </div>
     </div>
   </div>
 
-  <div class="col-12" [class.col-lg-7]="auth.isAdmin()">
-    <div class="card shadow-sm">
+  <div class="col-12 col-xl-4">
+    <div class="card shadow-sm h-100">
       <div class="card-body">
-        <h5 class="card-title mb-3">Itens cadastrados</h5>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th class="text-end">Preço</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of itens">
-                <td>{{ item.nome }}</td>
-                <td class="text-end">R$ {{ item.preco | number:'1.2-2' }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <h5 class="card-title mb-3">Cadastrar item</h5>
+        <form [formGroup]="itemForm" (ngSubmit)="cadastrarItem()" class="d-grid gap-2">
+          <input class="form-control" formControlName="nome" placeholder="Nome do item" />
+          <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço base" />
+
+          <label class="form-label mt-2 mb-1">Categorias permitidas</label>
+          <div class="border rounded p-2" style="max-height: 190px; overflow: auto;">
+            <div class="form-check" *ngFor="let categoria of categorias">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                [id]="'categoria-' + categoria.id"
+                [checked]="categoriaIdsSelecionadas.has(categoria.id)"
+                (change)="toggleCategoriaItem(categoria.id, $any($event.target).checked)"
+              />
+              <label class="form-check-label" [for]="'categoria-' + categoria.id">{{ categoria.nome }}</label>
+            </div>
+          </div>
+
+          <button class="btn btn-success mt-2" type="submit">Salvar item</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Categorias e subitens</h5>
+        <div *ngFor="let categoria of categorias" class="mb-3 border rounded p-2">
+          <button
+            type="button"
+            class="btn btn-sm w-100 d-flex justify-content-between align-items-center p-0 border-0 bg-transparent"
+            (click)="toggleCategoriaSubitens(categoria.id)"
+          >
+            <strong class="text-start">{{ categoria.nome }}</strong>
+            <span class="text-muted small">
+              {{ categoriaExpandida(categoria.id) ? 'Ocultar' : 'Exibir' }} ({{ categoria.subitens.length }})
+            </span>
+          </button>
+
+          <ul class="mb-0 mt-2" *ngIf="categoriaExpandida(categoria.id)">
+            <li *ngFor="let subitem of categoria.subitens">
+              <div class="d-flex justify-content-between align-items-center gap-2">
+                <span>{{ subitem.nome }} - R$ {{ subitem.preco | number:'1.2-2' }}</span>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  type="button"
+                  title="Excluir subitem"
+                  aria-label="Excluir subitem"
+                  (click)="excluirSubitem(categoria.id, subitem.id)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mt-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Itens cadastrados</h5>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Categorias de subitens</th>
+            <th class="text-end">Preço base</th>
+            <th *ngIf="auth.isAdmin()" class="text-end">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of itens">
+            <td>
+              <ng-container *ngIf="itemEmEdicaoId !== item.id; else editNome">
+                {{ item.nome }}
+              </ng-container>
+              <ng-template #editNome>
+                <input class="form-control form-control-sm" [formControl]="edicaoForm.controls.nome" />
+              </ng-template>
+            </td>
+            <td>{{ categoriasDoItem(item) }}</td>
+            <td class="text-end">
+              <ng-container *ngIf="itemEmEdicaoId !== item.id; else editPreco">
+                R$ {{ item.preco | number:'1.2-2' }}
+              </ng-container>
+              <ng-template #editPreco>
+                <input class="form-control form-control-sm text-end" type="number" step="0.01" [formControl]="edicaoForm.controls.preco" />
+              </ng-template>
+            </td>
+            <td *ngIf="auth.isAdmin()" class="text-end">
+              <div class="d-flex justify-content-end gap-2">
+                <ng-container *ngIf="itemEmEdicaoId !== item.id; else editButtons">
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    type="button"
+                    title="Alterar item"
+                    aria-label="Alterar item"
+                    (click)="iniciarEdicao(item)"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    type="button"
+                    title="Excluir item"
+                    aria-label="Excluir item"
+                    (click)="excluirItem(item.id)"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </ng-container>
+                <ng-template #editButtons>
+                  <button class="btn btn-sm btn-success" type="button" (click)="salvarEdicao(item.id)">Salvar</button>
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="cancelarEdicao()">Cancelar</button>
+                </ng-template>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="alert alert-success mt-3 mb-0" *ngIf="sucesso">{{ sucesso }}</div>
+    <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
   </div>
 </div>

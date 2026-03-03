@@ -16,9 +16,14 @@ export class AppComponent {
 
   loggedIn = computed(() => this.authService.isLoggedIn());
   user = computed(() => this.authService.getUser());
+  mustChangePassword = computed(() => this.authService.mustChangePassword());
 
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  isLoginRoute(): boolean {
+    return this.router.url.startsWith('/login');
   }
 }

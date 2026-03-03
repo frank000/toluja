@@ -4,14 +4,20 @@ import com.toluja.app.common.BooleanToIntegerConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "items")
@@ -29,7 +35,18 @@ public class Item {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal preco;
 
+    @Column(name = "tenant_id", nullable = false, length = 64)
+    private String tenantId;
+
     @Convert(converter = BooleanToIntegerConverter.class)
     @Column(nullable = false)
     private Boolean ativo;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "item_subitem_categories",
+            joinColumns = @JoinColumn(name = "item_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<SubitemCategory> categorias = new HashSet<>();
 }

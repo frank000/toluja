@@ -54,6 +54,7 @@ public class PrintService {
         StringBuilder sb = new StringBuilder();
         sb.append("\n=== CUPOM DE PEDIDO ===\n");
         sb.append("Código: ").append(order.getCodigo()).append("\n");
+        sb.append("Senha: ").append(String.format("%02d", order.getSenhaChamada())).append("\n");
         sb.append("Data/Hora: ").append(order.getCriadoEm().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))).append("\n");
         sb.append("Atendente: ").append(order.getUser().getNomeExibicao()).append("\n");
         sb.append("-------------------------\n");
@@ -64,6 +65,14 @@ public class PrintService {
                     .append(" | preço: ").append(item.getPrecoSnapshot())
                     .append(" | subtotal: ").append(item.getSubtotal())
                     .append("\n");
+            if (!item.getSubitens().isEmpty()) {
+                for (var subitem : item.getSubitens()) {
+                    sb.append("  + ").append(subitem.getCategoriaNomeSnapshot())
+                            .append(": ").append(subitem.getNomeSnapshot())
+                            .append(" (").append(subitem.getPrecoSnapshot()).append(")")
+                            .append("\n");
+                }
+            }
         }
 
         sb.append("-------------------------\n");

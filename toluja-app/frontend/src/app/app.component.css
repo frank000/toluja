@@ -1,2 +1,37 @@
 :host { display: block; min-height: 100vh; background: #f5f7fb; }
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-shell--watermark {
+  background-color: #f5f7fb;
+  background-image: url('/assets/logo%20transparente.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: min(95vw, 95vh);
+}
+
 .navbar-brand { font-weight: 700; }
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.navbar-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mobile-nav {
+  gap: 0.4rem;
+}
+
+@media (max-width: 767.98px) {
+  .navbar-main {
+    margin-top: 0.35rem;
+  }
+}

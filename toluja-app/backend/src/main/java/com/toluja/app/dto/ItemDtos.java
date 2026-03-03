@@ -5,8 +5,22 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class ItemDtos {
-    public record ItemRequest(@NotBlank String nome, @NotNull @DecimalMin("0.01") BigDecimal preco) {}
-    public record ItemResponse(Integer id, String nome, BigDecimal preco, Boolean ativo) {}
+    public record ItemRequest(
+            @NotBlank String nome,
+            @NotNull @DecimalMin("0.01") BigDecimal preco,
+            List<Integer> categoriaIds
+    ) {}
+    public record ItemUpdateRequest(
+            @NotBlank String nome,
+            @NotNull @DecimalMin("0.01") BigDecimal preco
+    ) {}
+    public record ItemResponse(Integer id, String nome, BigDecimal preco, Boolean ativo, List<SubitemCategoryResponse> categorias) {}
+
+    public record SubitemCategoryRequest(@NotBlank String nome) {}
+    public record SubitemRequest(@NotBlank String nome, @NotNull @DecimalMin("0.00") BigDecimal preco) {}
+    public record SubitemResponse(Integer id, String nome, BigDecimal preco) {}
+    public record SubitemCategoryResponse(Integer id, String nome, List<SubitemResponse> subitens) {}
 }

@@ -1,23 +1,35 @@
-<div class="row justify-content-center mt-5">
-  <div class="col-12 col-md-5 col-lg-4">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h4 class="mb-3">Entrar</h4>
-        <form [formGroup]="form" (ngSubmit)="submit()" class="d-grid gap-3">
-          <div>
-            <label class="form-label">Usuário</label>
-            <input class="form-control" type="text" formControlName="username" />
-          </div>
-          <div>
-            <label class="form-label">Senha</label>
-            <input class="form-control" type="password" formControlName="password" />
-          </div>
-          <button class="btn btn-primary" type="submit" [disabled]="loading">
-            {{ loading ? 'Entrando...' : 'Entrar' }}
-          </button>
-        </form>
-        <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
-      </div>
+<div class="login-page">
+  <button class="btn btn-outline-secondary btn-sm painel-btn" type="button" (click)="togglePainelMode()">
+    {{ painelMode ? 'Voltar ao login padrão' : 'Painel Superadmin' }}
+  </button>
+
+  <div class="login-shell shadow-lg">
+    <div class="login-logo-panel">
+      <img src="assets/logo transparente.png" alt="Toluja Go" class="login-logo" />
+    </div>
+
+    <div class="login-form-panel">
+      <h4 class="mb-4 text-center">{{ painelMode ? 'Entrar no Painel Superadmin' : 'Entrar' }}</h4>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="d-grid gap-3">
+        <div>
+          <label class="form-label">Tenant</label>
+          <select class="form-select" formControlName="tenantId" [disabled]="carregandoTenants">
+            <option *ngFor="let tenant of tenants" [value]="tenant.tenantId">{{ tenant.tenantId }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Usuário</label>
+          <input class="form-control" type="text" formControlName="username" />
+        </div>
+        <div>
+          <label class="form-label">Senha</label>
+          <input class="form-control" type="password" formControlName="password" />
+        </div>
+        <button class="btn btn-primary login-submit" type="submit" [disabled]="loading">
+          {{ loading ? 'Entrando...' : (painelMode ? 'Entrar no painel' : 'Entrar') }}
+        </button>
+      </form>
+      <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
     </div>
   </div>
 </div>

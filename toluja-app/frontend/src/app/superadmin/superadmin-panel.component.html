@@ -1,0 +1,78 @@
+<div class="superadmin-page">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-1">Painel Superadmin</h3>
+      <p class="text-muted mb-0">Cadastre tenants e usuários do sistema.</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Novo Tenant</h5>
+          <form [formGroup]="tenantForm" (ngSubmit)="submitTenant()" class="d-grid gap-3">
+            <div>
+              <label class="form-label">Tenant ID</label>
+              <input class="form-control" type="text" formControlName="tenantId" placeholder="ex: loja-centro" />
+            </div>
+            <div>
+              <label class="form-label">Nome</label>
+              <input class="form-control" type="text" formControlName="nome" placeholder="ex: Loja Centro" />
+            </div>
+            <button class="btn btn-primary" type="submit" [disabled]="savingTenant">
+              {{ savingTenant ? 'Salvando...' : 'Cadastrar tenant' }}
+            </button>
+          </form>
+          <div class="alert alert-danger mt-3 mb-0" *ngIf="tenantError">{{ tenantError }}</div>
+          <div class="alert alert-success mt-3 mb-0" *ngIf="tenantSuccess">{{ tenantSuccess }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Novo Usuário</h5>
+          <form [formGroup]="userForm" (ngSubmit)="submitUser()" class="d-grid gap-3">
+            <div>
+              <label class="form-label">Tenant</label>
+              <select class="form-select" formControlName="tenantId" [disabled]="loadingTenants">
+                <option value="" disabled>Selecione</option>
+                <option *ngFor="let tenant of tenants" [value]="tenant.tenantId">{{ tenant.tenantId }} - {{ tenant.nome }}</option>
+              </select>
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">Usuário</label>
+                <input class="form-control" type="text" formControlName="username" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Nome de exibição</label>
+                <input class="form-control" type="text" formControlName="nomeExibicao" />
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">Senha</label>
+                <input class="form-control" type="password" formControlName="password" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Perfil</label>
+                <select class="form-select" formControlName="role">
+                  <option value="ATENDENTE">ATENDENTE</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit" [disabled]="savingUser || loadingTenants">
+              {{ savingUser ? 'Salvando...' : 'Cadastrar usuário' }}
+            </button>
+          </form>
+          <div class="alert alert-danger mt-3 mb-0" *ngIf="userError">{{ userError }}</div>
+          <div class="alert alert-success mt-3 mb-0" *ngIf="userSuccess">{{ userSuccess }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

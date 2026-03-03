@@ -1,6 +1,7 @@
 package com.toluja.app.auth;
 
 import com.toluja.app.dto.AuthDtos;
+import com.toluja.app.security.AuthContext;
 import com.toluja.app.security.JwtService;
 import com.toluja.app.user.User;
 import com.toluja.app.user.UserRepository;
@@ -26,22 +27,24 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthDtos.LoginResponse login(@Valid @RequestBody AuthDtos.LoginRequest request) {
-        User user = userRepository.findByUsernameAndAtivoTrue(request.username())
+        String tenantId = request.tenantId().trim();
+        User user = userRepository.findByUsernameAndTenantIdAndAtivoTrue(request.username(), tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas");
         }
 
-        String token = jwtService.generateToken(user.getUsername(), user.getRole(), user.getDeveTrocarSenha());
-        var userInfo = new AuthDtos.UserInfo(user.getId(), user.getUsername(), user.getNomeExibicao(), user.getRole(), user.getDeveTrocarSenha());
+        String token = jwtService.generateToken(user.getTenantId(), user.getUsername(), user.getRole(), user.getDeveTrocarSenha());
+        var userInfo = new AuthDtos.UserInfo(user.getId(), user.getTenantId(), user.getUsername(), user.getNomeExibicao(), user.getRole(), user.getDeveTrocarSenha());
         return new AuthDtos.LoginResponse(token, userInfo);
     }
 
     @PostMapping("/change-password")
     public AuthDtos.LoginResponse changePassword(@Valid @RequestBody AuthDtos.ChangePasswordRequest request,
                                                  Authentication authentication) {
-        User user = userRepository.findByUsernameAndAtivoTrue(authentication.getName())
+        String tenantId = AuthContext.tenantId(authentication);
+        User user = userRepository.findByUsernameAndTenantIdAndAtivoTrue(authentication.getName(), tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         if (!passwordEncoder.matches(request.senhaAtual(), user.getPasswordHash())) {
@@ -52,8 +55,8 @@ public class AuthController {
         user.setDeveTrocarSenha(false);
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getUsername(), user.getRole(), false);
-        var userInfo = new AuthDtos.UserInfo(user.getId(), user.getUsername(), user.getNomeExibicao(), user.getRole(), false);
+        String token = jwtService.generateToken(user.getTenantId(), user.getUsername(), user.getRole(), false);
+        var userInfo = new AuthDtos.UserInfo(user.getId(), user.getTenantId(), user.getUsername(), user.getNomeExibicao(), user.getRole(), false);
         return new AuthDtos.LoginResponse(token, userInfo);
     }
 }

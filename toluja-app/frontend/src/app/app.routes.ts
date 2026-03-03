@@ -1,14 +1,19 @@
 import { Routes } from '@angular/router';
+import { ChangePasswordComponent } from './auth/change-password.component';
 import { LoginComponent } from './auth/login.component';
 import { authGuard } from './core/auth.guard';
+import { superadminGuard } from './core/superadmin.guard';
 import { ItensComponent } from './itens/itens.component';
 import { PedidoComponent } from './pedido/pedido.component';
 import { PedidosListaComponent } from './pedidos/pedidos-lista.component';
+import { SuperadminPanelComponent } from './superadmin/superadmin-panel.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'trocar-senha', component: ChangePasswordComponent, canActivate: [authGuard] },
   { path: 'itens', component: ItensComponent, canActivate: [authGuard] },
   { path: 'pedido', component: PedidoComponent, canActivate: [authGuard] },
   { path: 'pedidos', component: PedidosListaComponent, canActivate: [authGuard] },
-  { path: '', pathMatch: 'full', redirectTo: 'login' }
+  { path: 'painel-superadmin', component: SuperadminPanelComponent, canActivate: [authGuard, superadminGuard] },
+  { path: '', pathMatch: 'full', redirectTo: 'pedido' }
 ];

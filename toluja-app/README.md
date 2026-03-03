@@ -31,6 +31,10 @@ Schema criado pelo Flyway (`V1__init.sql`) com tabelas:
 - `items`
 - `orders`
 - `order_items`
+- `subitem_categories`
+- `subitems`
+- `item_subitem_categories`
+- `order_item_subitems`
 
 ### Usuário seed (Flyway)
 
@@ -58,12 +62,15 @@ Body exemplo:
 
 ### Itens
 
-- `GET /api/itens`: autenticado (`ADMIN` ou `ATENDENTE`).
-- `POST /api/itens`: somente `ADMIN`, valida `nome` obrigatório e `preco > 0`.
+- `GET /api/itens`: autenticado (`ADMIN` ou `ATENDENTE`), retorna item com categorias/subitens permitidos.
+- `POST /api/itens`: somente `ADMIN`, valida `nome`, `preco > 0` e categorias opcionais permitidas para o item.
+- `GET /api/subitens/categorias`: autenticado (`ADMIN` ou `ATENDENTE`), retorna categorias com subitens.
+- `POST /api/subitens/categorias`: somente `ADMIN`, cria categoria de subitens.
+- `POST /api/subitens/categorias/{categoriaId}/subitens`: somente `ADMIN`, cria subitem na categoria.
 
 ### Pedidos
 
-- `POST /api/pedidos`: autenticado; recebe `itens[{itemId, quantidade}]` e `observacao` opcional, cria pedido para usuário logado, calcula subtotal/total e gera `codigo` único de 5 caracteres.
+- `POST /api/pedidos`: autenticado; recebe `itens[{itemId, quantidade, subitemIds[]}]` e `observacao` opcional, valida subitens permitidos por item, soma adicionais no subtotal/total, gera `codigo` único de 5 caracteres e `senhaChamada` incremental.
 - `GET /api/pedidos`:
   - `ADMIN` vê todos os pedidos.
   - `ATENDENTE` vê somente os próprios pedidos.
@@ -95,9 +102,10 @@ Se a impressão falhar em qualquer uma das duas:
 Cupom contém:
 
 - código do pedido
+- senha de chamada
 - data/hora
 - nomeExibicao do usuário
-- itens (nome, quantidade, preço, subtotal)
+- itens (nome, quantidade, preço base, subitens selecionados e subtotal)
 - total e observação
 
 ## Frontend
@@ -124,6 +132,9 @@ Aplicação disponível em `http://localhost:4200`.
 - `POST /api/auth/change-password`
 - `GET /api/itens`
 - `POST /api/itens`
+- `GET /api/subitens/categorias`
+- `POST /api/subitens/categorias`
+- `POST /api/subitens/categorias/{categoriaId}/subitens`
 - `GET /api/pedidos`
 - `POST /api/pedidos`
 

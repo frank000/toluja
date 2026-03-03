@@ -33,11 +33,17 @@ public class Order {
     @Column(nullable = false, unique = true, length = 5)
     private String codigo;
 
+    @Column(name = "senha_chamada", nullable = false)
+    private Integer senhaChamada;
+
     @Column(name = "criado_em", nullable = false)
     private OffsetDateTime criadoEm;
 
     @Column(nullable = false, length = 30)
     private String status;
+
+    @Column(name = "tenant_id", nullable = false, length = 64)
+    private String tenantId;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;

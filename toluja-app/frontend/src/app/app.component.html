@@ -1,19 +1,38 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-  <div class="container">
-    <a class="navbar-brand" routerLink="/itens">Toluja App</a>
+<div class="app-shell" [class.app-shell--watermark]="loggedIn() && !isLoginRoute()">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" *ngIf="!isLoginRoute()">
+    <div class="container">
+      <a class="navbar-brand d-inline-flex align-items-center gap-2" routerLink="/pedido">
+        <img src="assets/logo transparente.png" alt="Toluja Go" class="brand-logo" />
+        <span>Toluja GO</span>
+      </a>
 
-    <div class="collapse navbar-collapse show" *ngIf="loggedIn()">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" routerLink="/itens">Itens</a></li>
-        <li class="nav-item"><a class="nav-link" routerLink="/pedido">Novo Pedido</a></li>
-        <li class="nav-item"><a class="nav-link" routerLink="/pedidos">Pedidos</a></li>
-      </ul>
-      <span class="text-white me-3" *ngIf="user()">{{ user()?.nomeExibicao }} ({{ user()?.role }})</span>
-      <button class="btn btn-light btn-sm" (click)="logout()">Sair</button>
+      <div class="navbar-main w-100" *ngIf="loggedIn()">
+        <ul class="navbar-nav me-auto mb-0 d-none d-md-flex flex-row gap-2">
+          <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/itens">Itens</a></li>
+          <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/pedido">Novo Pedido</a></li>
+          <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/pedidos">Pedidos</a></li>
+          <li class="nav-item" *ngIf="mustChangePassword()"><a class="nav-link" routerLink="/trocar-senha">Trocar senha</a></li>
+        </ul>
+
+        <div class="mobile-nav d-flex d-md-none" *ngIf="!mustChangePassword()">
+          <a class="btn btn-outline-light btn-sm" routerLink="/itens" title="Itens" aria-label="Itens"><i class="bi bi-grid"></i></a>
+          <a class="btn btn-outline-light btn-sm" routerLink="/pedido" title="Novo Pedido" aria-label="Novo Pedido"><i class="bi bi-plus-square"></i></a>
+          <a class="btn btn-outline-light btn-sm" routerLink="/pedidos" title="Pedidos" aria-label="Pedidos"><i class="bi bi-card-list"></i></a>
+        </div>
+
+        <div class="mobile-nav d-flex d-md-none" *ngIf="mustChangePassword()">
+          <a class="btn btn-outline-light btn-sm" routerLink="/trocar-senha" title="Trocar senha" aria-label="Trocar senha"><i class="bi bi-key"></i></a>
+        </div>
+
+        <div class="session-actions d-flex align-items-center gap-2">
+          <span class="text-white d-none d-md-inline" *ngIf="user()">{{ user()?.nomeExibicao }} ({{ user()?.role }})</span>
+          <button class="btn btn-light btn-sm" (click)="logout()">Sair</button>
+        </div>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
-<main class="container py-4">
-  <router-outlet></router-outlet>
-</main>
+  <main class="container py-4">
+    <router-outlet></router-outlet>
+  </main>
+</div>

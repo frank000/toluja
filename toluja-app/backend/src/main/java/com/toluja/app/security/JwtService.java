@@ -19,11 +19,12 @@ public class JwtService {
     @Value("${app.jwt.expiration-ms}")
     private long expirationMs;
 
-    public String generateToken(String username, String role, boolean deveTrocarSenha) {
+    public String generateToken(String tenantId, String username, String role, boolean deveTrocarSenha) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
                 .subject(username)
+                .claim("tenantId", tenantId)
                 .claim("role", role)
                 .claim("deveTrocarSenha", deveTrocarSenha)
                 .issuedAt(now)
@@ -38,6 +39,10 @@ public class JwtService {
 
     public String extractRole(String token) {
         return parseClaims(token).get("role", String.class);
+    }
+
+    public String extractTenantId(String token) {
+        return parseClaims(token).get("tenantId", String.class);
     }
 
     public boolean extractDeveTrocarSenha(String token) {
