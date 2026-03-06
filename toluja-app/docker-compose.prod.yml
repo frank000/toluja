@@ -35,8 +35,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
 
   frontend:
     image: ${FRONTEND_IMAGE}
@@ -44,8 +44,15 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    ports:
-      - "80:80"
+    expose:
+      - "80"
+    networks:
+      - default
+      - proxy
 
 volumes:
   db_data:
+
+networks:
+  proxy:
+    external: true

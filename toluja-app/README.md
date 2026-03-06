@@ -231,3 +231,37 @@ Para atualizar depois de novo push:
 docker compose --env-file .env.prod -f docker-compose.prod.yml pull
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
+
+## Nginx Proxy Manager em compose separado
+
+Arquivo pronto: `docker-compose.npm.yml`.
+
+### 1) Criar rede compartilhada
+
+```bash
+docker network create proxy
+```
+
+### 2) Subir NPM
+
+```bash
+docker compose -f docker-compose.npm.yml up -d
+```
+
+Painel NPM: `http://SEU_IP:81`
+
+- Email inicial: `admin@example.com`
+- Senha inicial: `changeme`
+
+### 3) Subir app
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+```
+
+### 4) Criar Proxy Host no NPM
+
+- Domain Names: seu domínio
+- Forward Hostname / IP: `toluja-frontend`
+- Forward Port: `80`
+- SSL: solicitar Let's Encrypt e habilitar Force SSL
