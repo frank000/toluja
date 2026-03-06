@@ -1,13 +1,24 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { CreatedTenant, Item, NovoItem, Pedido, PedidoItem, SubitemCategoria, TenantSummary } from './models';
+import { HttpParams } from '@angular/common/http';
+import { CreatedTenant, Item, NovoItem, PagedResponse, Pedido, PedidoItem, Segmento, SubitemCategoria, TenantSummary } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   constructor(private http: HttpClient) {}
 
-  listarItens() {
-    return this.http.get<Item[]>('/api/itens');
+  listarItens(params?: { nome?: string; page?: number; size?: number }) {
+    let queryParams = new HttpParams();
+    if (params?.nome && params.nome.trim()) {
+      queryParams = queryParams.set('nome', params.nome.trim());
+    }
+    if (params?.page !== undefined) {
+      queryParams = queryParams.set('page', params.page);
+    }
+    if (params?.size !== undefined) {
+      queryParams = queryParams.set('size', params.size);
+    }
+    return this.http.get<PagedResponse<Item>>('/api/itens', { params: queryParams });
   }
 
   criarItem(payload: NovoItem) {
@@ -20,6 +31,14 @@ export class ApiService {
 
   excluirItem(itemId: number) {
     return this.http.delete<void>(`/api/itens/${itemId}`);
+  }
+
+  listarSegmentos() {
+    return this.http.get<Segmento[]>('/api/segmentos');
+  }
+
+  criarSegmento(payload: { nome: string; cor: string; icone: string }) {
+    return this.http.post<Segmento>('/api/segmentos', payload);
   }
 
   listarCategoriasSubitens() {

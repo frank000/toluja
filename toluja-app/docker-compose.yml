@@ -1,21 +1,39 @@
 services:
   db:
-    image: alpine:3.20
+    image: postgres:16-alpine
     container_name: toluja-db
-    command: sh -c "mkdir -p /data && touch /data/pedido.db && tail -f /dev/null"
+    environment:
+      POSTGRES_DB: toluja
+      POSTGRES_USER: toluja
+      POSTGRES_PASSWORD: toluja
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toluja -d toluja"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
-      - db_data:/data
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   backend:
     build:
       context: ./backend
     container_name: toluja-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlite:/app/data/pedido.db
-    volumes:
-      - db_data:/app/data
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/toluja
+      SPRING_DATASOURCE_USERNAME: toluja
+      SPRING_DATASOURCE_PASSWORD: toluja
+      PRINTERS_MODE: agent
+      PRINTERS_PRINTER1: IMPRESSORA1
+      PRINTERS_PRINTER2: IMPRESSORA2
+      PRINTERS_PRINTER3: IMPRESSORA3
+      PRINTERS_AGENT_STORE_ID: store-001
+      PRINTERS_AGENT_DEVICE_ID: agent-store-001
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8080:8080"
 

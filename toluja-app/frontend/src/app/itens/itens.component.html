@@ -2,90 +2,118 @@
   Cadastro de categorias e subitens disponível apenas para usuários ADMIN.
 </div>
 
-<div class="row g-4" *ngIf="auth.isAdmin()">
-  <div class="col-12 col-xl-4">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title mb-3">Categoria de subitens</h5>
-        <form [formGroup]="categoriaForm" (ngSubmit)="cadastrarCategoria()" class="d-grid gap-2 mb-4">
-          <input class="form-control" formControlName="nome" placeholder="Ex: Adicionais" />
-          <button class="btn btn-primary" type="submit">Salvar categoria</button>
-        </form>
-
-        <h6 class="mb-2">Novo subitem</h6>
-        <form [formGroup]="subitemForm" (ngSubmit)="cadastrarSubitem()" class="d-grid gap-2">
-          <select class="form-select" formControlName="categoriaId">
-            <option [ngValue]="null">Selecione a categoria</option>
-            <option *ngFor="let categoria of categorias" [ngValue]="categoria.id">{{ categoria.nome }}</option>
-          </select>
-          <input class="form-control" formControlName="nome" placeholder="Ex: Queijo" />
-          <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
-          <button class="btn btn-outline-primary" type="submit">Salvar subitem</button>
-        </form>
-      </div>
-    </div>
+<div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Cadastros</h5>
+    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="toggleSecaoCadastros()">
+      {{ secaoCadastrosExpandida ? 'Recolher' : 'Expandir' }}
+    </button>
   </div>
+  <div class="card-body" *ngIf="secaoCadastrosExpandida">
+    <div class="row g-4" *ngIf="auth.isAdmin()">
+      <div class="col-12 col-xl-4">
+        <div class="card border h-100">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Categoria de subitens</h5>
+            <form [formGroup]="categoriaForm" (ngSubmit)="cadastrarCategoria()" class="d-grid gap-2 mb-4">
+              <input class="form-control" formControlName="nome" placeholder="Ex: Adicionais" />
+              <button class="btn btn-primary" type="submit">Salvar categoria</button>
+            </form>
 
-  <div class="col-12 col-xl-4">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title mb-3">Cadastrar item</h5>
-        <form [formGroup]="itemForm" (ngSubmit)="cadastrarItem()" class="d-grid gap-2">
-          <input class="form-control" formControlName="nome" placeholder="Nome do item" />
-          <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço base" />
+            <h6 class="mb-2">Novo subitem</h6>
+            <form [formGroup]="subitemForm" (ngSubmit)="cadastrarSubitem()" class="d-grid gap-2">
+              <select class="form-select" formControlName="categoriaId">
+                <option [ngValue]="null">Selecione a categoria</option>
+                <option *ngFor="let categoria of categorias" [ngValue]="categoria.id">{{ categoria.nome }}</option>
+              </select>
+              <input class="form-control" formControlName="nome" placeholder="Ex: Queijo" />
+              <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
+              <button class="btn btn-outline-primary" type="submit">Salvar subitem</button>
+            </form>
 
-          <label class="form-label mt-2 mb-1">Categorias permitidas</label>
-          <div class="border rounded p-2" style="max-height: 190px; overflow: auto;">
-            <div class="form-check" *ngFor="let categoria of categorias">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                [id]="'categoria-' + categoria.id"
-                [checked]="categoriaIdsSelecionadas.has(categoria.id)"
-                (change)="toggleCategoriaItem(categoria.id, $any($event.target).checked)"
-              />
-              <label class="form-check-label" [for]="'categoria-' + categoria.id">{{ categoria.nome }}</label>
+            <hr class="my-4" />
+
+            <h6 class="mb-2">Novo segmento</h6>
+            <form [formGroup]="segmentoForm" (ngSubmit)="cadastrarSegmento()" class="d-grid gap-2">
+              <input class="form-control" formControlName="nome" placeholder="Ex: Bebidas" />
+              <div class="d-flex gap-2">
+                <input class="form-control form-control-color" type="color" formControlName="cor" title="Cor do segmento" />
+                <select class="form-select" formControlName="icone">
+                  <option *ngFor="let icone of iconesBasicos" [ngValue]="icone.value">{{ icone.label }}</option>
+                </select>
+              </div>
+              <button class="btn btn-outline-dark" type="submit">Salvar segmento</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-xl-4">
+        <div class="card border h-100">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Categorias e subitens</h5>
+            <div *ngFor="let categoria of categorias" class="mb-3 border rounded p-2">
+              <button
+                type="button"
+                class="btn btn-sm w-100 d-flex justify-content-between align-items-center p-0 border-0 bg-transparent"
+                (click)="toggleCategoriaSubitens(categoria.id)"
+              >
+                <strong class="text-start">{{ categoria.nome }}</strong>
+                <span class="text-muted small">
+                  {{ categoriaExpandida(categoria.id) ? 'Ocultar' : 'Exibir' }} ({{ categoria.subitens.length }})
+                </span>
+              </button>
+
+              <ul class="mb-0 mt-2" *ngIf="categoriaExpandida(categoria.id)">
+                <li *ngFor="let subitem of categoria.subitens">
+                  <div class="d-flex justify-content-between align-items-center gap-2">
+                    <span>{{ subitem.nome }} - R$ {{ subitem.preco | number:'1.2-2' }}</span>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      type="button"
+                      title="Excluir subitem"
+                      aria-label="Excluir subitem"
+                      (click)="excluirSubitem(categoria.id, subitem.id)"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
-
-          <button class="btn btn-success mt-2" type="submit">Salvar item</button>
-        </form>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="col-12 col-xl-4">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title mb-3">Categorias e subitens</h5>
-        <div *ngFor="let categoria of categorias" class="mb-3 border rounded p-2">
-          <button
-            type="button"
-            class="btn btn-sm w-100 d-flex justify-content-between align-items-center p-0 border-0 bg-transparent"
-            (click)="toggleCategoriaSubitens(categoria.id)"
-          >
-            <strong class="text-start">{{ categoria.nome }}</strong>
-            <span class="text-muted small">
-              {{ categoriaExpandida(categoria.id) ? 'Ocultar' : 'Exibir' }} ({{ categoria.subitens.length }})
-            </span>
-          </button>
+      <div class="col-12 col-xl-4">
+        <div class="card border h-100">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Cadastrar item</h5>
+            <form [formGroup]="itemForm" (ngSubmit)="cadastrarItem()" class="d-grid gap-2">
+              <input class="form-control" formControlName="nome" placeholder="Nome do item" />
+              <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço base" />
+              <select class="form-select" formControlName="segmentoId">
+                <option [ngValue]="null">Sem segmento</option>
+                <option *ngFor="let segmento of segmentos" [ngValue]="segmento.id">{{ segmento.nome }}</option>
+              </select>
 
-          <ul class="mb-0 mt-2" *ngIf="categoriaExpandida(categoria.id)">
-            <li *ngFor="let subitem of categoria.subitens">
-              <div class="d-flex justify-content-between align-items-center gap-2">
-                <span>{{ subitem.nome }} - R$ {{ subitem.preco | number:'1.2-2' }}</span>
-                <button
-                  class="btn btn-sm btn-outline-danger"
-                  type="button"
-                  title="Excluir subitem"
-                  aria-label="Excluir subitem"
-                  (click)="excluirSubitem(categoria.id, subitem.id)"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
+              <label class="form-label mt-2 mb-1">Categorias permitidas</label>
+              <div class="border rounded p-2" style="max-height: 190px; overflow: auto;">
+                <div class="form-check" *ngFor="let categoria of categorias">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [id]="'categoria-' + categoria.id"
+                    [checked]="categoriaIdsSelecionadas.has(categoria.id)"
+                    (change)="toggleCategoriaItem(categoria.id, $any($event.target).checked)"
+                  />
+                  <label class="form-check-label" [for]="'categoria-' + categoria.id">{{ categoria.nome }}</label>
+                </div>
               </div>
-            </li>
-          </ul>
+
+              <button class="btn btn-success mt-2" type="submit">Salvar item</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -93,8 +121,31 @@
 </div>
 
 <div class="card shadow-sm mt-4">
-  <div class="card-body">
-    <h5 class="card-title mb-3">Itens cadastrados</h5>
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Itens cadastrados</h5>
+    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="toggleSecaoItens()">
+      {{ secaoItensExpandida ? 'Recolher' : 'Expandir' }}
+    </button>
+  </div>
+  <div class="card-body" *ngIf="secaoItensExpandida">
+    <form class="row g-2 mb-3" (ngSubmit)="aplicarFiltro()">
+      <div class="col-12 col-md-8 col-lg-6">
+        <input
+          class="form-control"
+          type="text"
+          [(ngModel)]="filtroNome"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Filtrar por nome do item"
+        />
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Pesquisar</button>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-secondary" type="button" (click)="limparFiltro()">Limpar</button>
+      </div>
+    </form>
+
     <div class="table-responsive">
       <table class="table table-hover align-middle">
         <thead>
@@ -153,10 +204,35 @@
               </div>
             </td>
           </tr>
+          <tr *ngIf="itens.length === 0">
+            <td [attr.colspan]="auth.isAdmin() ? 4 : 3" class="text-center text-muted py-4">
+              Nenhum item encontrado.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
-    <div class="alert alert-success mt-3 mb-0" *ngIf="sucesso">{{ sucesso }}</div>
-    <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" *ngIf="totalPaginas > 0">
+      <span class="text-muted small">
+        {{ totalItens }} item(ns) no total
+      </span>
+      <nav aria-label="Paginação dos itens">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="primeiraPagina">
+            <button class="page-link" type="button" (click)="irParaPagina(paginaAtual - 1)">Anterior</button>
+          </li>
+          <li class="page-item" *ngFor="let page of paginasVisiveis()" [class.active]="page === paginaAtual">
+            <button class="page-link" type="button" (click)="irParaPagina(page)">{{ page + 1 }}</button>
+          </li>
+          <li class="page-item" [class.disabled]="ultimaPagina">
+            <button class="page-link" type="button" (click)="irParaPagina(paginaAtual + 1)">Próxima</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
   </div>
 </div>
+
+<div class="alert alert-success mt-3 mb-0" *ngIf="sucesso">{{ sucesso }}</div>
+<div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>

@@ -5,7 +5,7 @@ Monorepo com frontend Angular e backend Spring Boot para autenticação JWT, ges
 ## Estrutura
 
 - `frontend/`: aplicação Angular (login, itens, pedido e lista de pedidos).
-- `backend/`: API Spring Boot com JWT, Validation, Security, JPA, Flyway e SQLite.
+- `backend/`: API Spring Boot com JWT, Validation, Security, JPA, Flyway e PostgreSQL.
 
 ## Pré-requisitos
 
@@ -23,7 +23,17 @@ mvn spring-boot:run
 
 API disponível em `http://localhost:8080`.
 
-Banco SQLite em arquivo: `backend/data/pedido.db` (`jdbc:sqlite:./data/pedido.db`).
+Banco PostgreSQL padrão:
+
+- URL: `jdbc:postgresql://localhost:5432/toluja`
+- usuário: `toluja`
+- senha: `toluja`
+
+Também é possível sobrescrever por variáveis:
+
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
 
 Schema criado pelo Flyway (`V1__init.sql`) com tabelas:
 
@@ -143,7 +153,7 @@ CORS configurado para `http://localhost:4200`.
 
 ## Docker (front + back + db)
 
-Para subir tudo de uma vez (frontend, backend e volume de banco SQLite):
+Para subir tudo de uma vez (frontend, backend e PostgreSQL):
 
 ```bash
 cd toluja-app
@@ -154,7 +164,7 @@ Serviços:
 
 - Frontend: `http://localhost:4200`
 - Backend: `http://localhost:8080`
-- DB (volume SQLite): serviço `db` mantendo o arquivo `pedido.db` em volume Docker `db_data`.
+- DB (PostgreSQL): serviço `db` em `localhost:5432`, com dados persistidos no volume Docker `db_data`.
 
 Para parar:
 
@@ -166,4 +176,58 @@ Para apagar também o volume do banco:
 
 ```bash
 docker compose down -v
+```
+
+## Deploy na Contabo com imagem gerada no GitHub
+
+Este repositório já possui workflow para build/push de imagens Docker no GHCR:
+
+- Workflow: `.github/workflows/docker-images.yml`
+- Imagens publicadas:
+  - `ghcr.io/<owner>/toluja-backend:latest`
+  - `ghcr.io/<owner>/toluja-frontend:latest`
+
+### 1) Build automático no GitHub
+
+Ao fazer push na branch `main` (ou rodar manualmente no Actions), o GitHub gera e publica as imagens.
+
+### 2) Preparar VPS (Contabo)
+
+Na VPS:
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin
+sudo usermod -aG docker $USER
+```
+
+Faça logout/login novamente para aplicar grupo docker.
+
+### 3) Subir containers na VPS
+
+Copie para a VPS:
+
+- `docker-compose.prod.yml`
+- `.env.prod.example` (renomeie para `.env.prod`)
+
+Edite `.env.prod` com seus valores reais (imagens, senha do banco, JWT e domínio).
+
+Login no GHCR com token do GitHub (`read:packages`):
+
+```bash
+echo "<SEU_GHCR_TOKEN>" | docker login ghcr.io -u <SEU_USUARIO_GITHUB> --password-stdin
+```
+
+Suba os containers:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml pull
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+```
+
+Para atualizar depois de novo push:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml pull
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```

@@ -12,4 +12,6 @@ SET senha_chamada = (
 )
 WHERE senha_chamada IS NULL;
 
+ALTER TABLE orders ALTER COLUMN senha_chamada SET NOT NULL;
+
 CREATE UNIQUE INDEX uk_orders_senha_chamada ON orders(senha_chamada);

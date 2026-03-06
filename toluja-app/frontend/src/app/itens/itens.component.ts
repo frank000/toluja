@@ -1,22 +1,33 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
-import { Item, SubitemCategoria } from '../core/models';
+import { Item, Segmento, SubitemCategoria } from '../core/models';
 
 @Component({
   selector: 'app-itens',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './itens.component.html'
 })
 export class ItensComponent implements OnInit {
   itens: Item[] = [];
   categorias: SubitemCategoria[] = [];
+  segmentos: Segmento[] = [];
   erro = '';
   sucesso = '';
+  filtroNome = '';
   categoriasExpandidas = new Set<number>();
+  secaoCadastrosExpandida = true;
+  secaoItensExpandida = true;
+
+  paginaAtual = 0;
+  tamanhoPagina = 10;
+  totalPaginas = 0;
+  totalItens = 0;
+  primeiraPagina = true;
+  ultimaPagina = true;
 
   categoriaForm = this.fb.group({
     nome: ['', Validators.required]
@@ -30,7 +41,14 @@ export class ItensComponent implements OnInit {
 
   itemForm = this.fb.group({
     nome: ['', Validators.required],
-    preco: [0, [Validators.required, Validators.min(0.01)]]
+    preco: [0, [Validators.required, Validators.min(0.01)]],
+    segmentoId: [null as number | null]
+  });
+
+  segmentoForm = this.fb.group({
+    nome: ['', Validators.required],
+    cor: ['#1A73E8', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
+    icone: ['bi-tag', Validators.required]
   });
 
   edicaoForm = this.fb.group({
@@ -40,11 +58,58 @@ export class ItensComponent implements OnInit {
 
   categoriaIdsSelecionadas = new Set<number>();
   itemEmEdicaoId: number | null = null;
+  readonly iconesBasicos = [
+    { value: 'bi-cup-straw', label: 'Bebidas' },
+    { value: 'bi-cup-hot', label: 'Café/Chá' },
+    { value: 'bi-egg-fried', label: 'Refeições' },
+    { value: 'bi-basket2', label: 'Mercado' },
+    { value: 'bi-ice-cream', label: 'Sobremesas' },
+    { value: 'bi-star', label: 'Destaques' },
+    { value: 'bi-tag', label: 'Geral' }
+  ];
 
   constructor(private fb: FormBuilder, private api: ApiService, public auth: AuthService) {}
 
   ngOnInit(): void {
     this.recarregarTela();
+  }
+
+  toggleSecaoCadastros(): void {
+    this.secaoCadastrosExpandida = !this.secaoCadastrosExpandida;
+  }
+
+  toggleSecaoItens(): void {
+    this.secaoItensExpandida = !this.secaoItensExpandida;
+  }
+
+  aplicarFiltro(): void {
+    this.paginaAtual = 0;
+    this.carregarItens();
+  }
+
+  limparFiltro(): void {
+    this.filtroNome = '';
+    this.paginaAtual = 0;
+    this.carregarItens();
+  }
+
+  irParaPagina(page: number): void {
+    if (page < 0 || page >= this.totalPaginas || page === this.paginaAtual) {
+      return;
+    }
+    this.paginaAtual = page;
+    this.carregarItens();
+  }
+
+  paginasVisiveis(): number[] {
+    if (this.totalPaginas <= 0) {
+      return [];
+    }
+    const maxPaginas = 5;
+    const inicio = Math.max(0, this.paginaAtual - Math.floor(maxPaginas / 2));
+    const fim = Math.min(this.totalPaginas, inicio + maxPaginas);
+    const inicioAjustado = Math.max(0, fim - maxPaginas);
+    return Array.from({ length: fim - inicioAjustado }, (_, i) => inicioAjustado + i);
   }
 
   cadastrarCategoria(): void {
@@ -79,6 +144,26 @@ export class ItensComponent implements OnInit {
     });
   }
 
+  cadastrarSegmento(): void {
+    if (this.segmentoForm.invalid || !this.auth.isAdmin()) return;
+    this.sucesso = '';
+    const value = this.segmentoForm.getRawValue();
+    const nome = value.nome?.trim();
+    const cor = value.cor?.trim();
+    const icone = value.icone?.trim();
+
+    if (!nome || !cor || !icone) return;
+
+    this.api.criarSegmento({ nome, cor, icone }).subscribe({
+      next: () => {
+        this.segmentoForm.reset({ nome: '', cor: '#1A73E8', icone: 'bi-tag' });
+        this.sucesso = 'Segmento cadastrado com sucesso.';
+        this.carregarSegmentos();
+      },
+      error: () => (this.erro = 'Não foi possível cadastrar segmento.')
+    });
+  }
+
   cadastrarItem(): void {
     if (this.itemForm.invalid || !this.auth.isAdmin()) return;
     this.sucesso = '';
@@ -87,10 +172,11 @@ export class ItensComponent implements OnInit {
     this.api.criarItem({
       nome: value.nome || '',
       preco: value.preco || 0,
-      categoriaIds: Array.from(this.categoriaIdsSelecionadas)
+      categoriaIds: Array.from(this.categoriaIdsSelecionadas),
+      segmentoId: value.segmentoId
     }).subscribe({
       next: () => {
-        this.itemForm.reset({ nome: '', preco: 0 });
+        this.itemForm.reset({ nome: '', preco: 0, segmentoId: null });
         this.categoriaIdsSelecionadas.clear();
         this.sucesso = 'Item cadastrado com sucesso.';
         this.carregarItens();
@@ -174,10 +260,28 @@ export class ItensComponent implements OnInit {
   private recarregarTela(): void {
     this.carregarItens();
     this.carregarCategorias();
+    this.carregarSegmentos();
   }
 
   private carregarItens(): void {
-    this.api.listarItens().subscribe((itens) => (this.itens = itens));
+    this.api.listarItens({
+      nome: this.filtroNome,
+      page: this.paginaAtual,
+      size: this.tamanhoPagina
+    }).subscribe((response) => {
+      this.itens = response.itens;
+      this.paginaAtual = response.page;
+      this.tamanhoPagina = response.size;
+      this.totalPaginas = response.totalPages;
+      this.totalItens = response.totalElements;
+      this.primeiraPagina = response.first;
+      this.ultimaPagina = response.last;
+
+      if (this.paginaAtual > 0 && this.itens.length === 0 && this.totalItens > 0) {
+        this.paginaAtual -= 1;
+        this.carregarItens();
+      }
+    });
   }
 
   private carregarCategorias(): void {
@@ -189,6 +293,12 @@ export class ItensComponent implements OnInit {
           this.categoriasExpandidas.delete(id);
         }
       });
+    });
+  }
+
+  private carregarSegmentos(): void {
+    this.api.listarSegmentos().subscribe((segmentos) => {
+      this.segmentos = segmentos;
     });
   }
 

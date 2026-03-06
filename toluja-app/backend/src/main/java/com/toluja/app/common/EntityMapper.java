@@ -13,7 +13,16 @@ public class EntityMapper {
 
     public ItemDtos.ItemResponse toItemResponse(Item item) {
         var categorias = item.getCategorias().stream().map(this::toSubitemCategoryResponse).toList();
-        return new ItemDtos.ItemResponse(item.getId(), item.getNome(), item.getPreco(), item.getAtivo(), categorias);
+        ItemDtos.SegmentResponse segmento = null;
+        if (item.getSegment() != null) {
+            segmento = new ItemDtos.SegmentResponse(
+                    item.getSegment().getId(),
+                    item.getSegment().getNome(),
+                    item.getSegment().getCor(),
+                    item.getSegment().getIcone()
+            );
+        }
+        return new ItemDtos.ItemResponse(item.getId(), item.getNome(), item.getPreco(), item.getAtivo(), segmento, categorias);
     }
 
     public ItemDtos.SubitemCategoryResponse toSubitemCategoryResponse(com.toluja.app.item.SubitemCategory categoria) {

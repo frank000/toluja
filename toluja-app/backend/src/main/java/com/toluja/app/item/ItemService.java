@@ -3,6 +3,10 @@ package com.toluja.app.item;
 import com.toluja.app.common.EntityMapper;
 import com.toluja.app.dto.ItemDtos;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,18 +23,48 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final SubitemCategoryRepository subitemCategoryRepository;
+    private final SegmentRepository segmentRepository;
     private final EntityMapper mapper;
 
-    public List<ItemDtos.ItemResponse> listarAtivos(String tenantId) {
-        return itemRepository.findByAtivoTrueAndTenantId(tenantId).stream().map(mapper::toItemResponse).toList();
+    public ItemDtos.ItemPageResponse listarAtivos(String tenantId, String nome, Integer page, Integer size) {
+        int pagina = (page == null || page < 0) ? 0 : page;
+        int tamanho = (size == null || size < 1) ? 10 : Math.min(size, 100);
+        String filtroNome = nome == null ? "" : nome.trim();
+
+        Pageable pageable = PageRequest.of(
+                pagina,
+                tamanho,
+                Sort.by(Sort.Direction.ASC, "nome").and(Sort.by(Sort.Direction.ASC, "id"))
+        );
+
+        Page<Item> itensPage = filtroNome.isBlank()
+                ? itemRepository.findByAtivoTrueAndTenantId(tenantId, pageable)
+                : itemRepository.findByAtivoTrueAndTenantIdAndNomeContainingIgnoreCase(tenantId, filtroNome, pageable);
+
+        List<ItemDtos.ItemResponse> itens = itensPage.getContent().stream().map(mapper::toItemResponse).toList();
+        return new ItemDtos.ItemPageResponse(
+                itens,
+                itensPage.getNumber(),
+                itensPage.getSize(),
+                itensPage.getTotalElements(),
+                itensPage.getTotalPages(),
+                itensPage.isFirst(),
+                itensPage.isLast()
+        );
     }
 
     public ItemDtos.ItemResponse criar(ItemDtos.ItemRequest request, String tenantId) {
+        String nome = request.nome().trim();
+        if (itemRepository.existsByTenantIdAndNomeIgnoreCaseAndAtivoTrue(tenantId, nome)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Já existe item ativo com esse nome");
+        }
+
         Item item = new Item();
-        item.setNome(request.nome());
+        item.setNome(nome);
         item.setPreco(request.preco());
         item.setTenantId(tenantId);
         item.setAtivo(true);
+        item.setSegment(buscarSegmento(request.segmentoId(), tenantId));
         item.setCategorias(buscarCategorias(request.categoriaIds(), tenantId));
         return mapper.toItemResponse(itemRepository.save(item));
     }
@@ -39,7 +73,12 @@ public class ItemService {
         Item item = itemRepository.findByIdAndAtivoTrueAndTenantId(itemId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Item não encontrado"));
 
-        item.setNome(request.nome().trim());
+        String nome = request.nome().trim();
+        if (itemRepository.existsByTenantIdAndNomeIgnoreCaseAndAtivoTrueAndIdNot(tenantId, nome, itemId)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Já existe item ativo com esse nome");
+        }
+
+        item.setNome(nome);
         item.setPreco(request.preco());
         return mapper.toItemResponse(itemRepository.save(item));
     }
@@ -64,5 +103,13 @@ public class ItemService {
             throw new ResponseStatusException(BAD_REQUEST, "Categoria sem subitens não pode ser associada ao item");
         }
         return new HashSet<>(categorias);
+    }
+
+    private Segment buscarSegmento(Integer segmentoId, String tenantId) {
+        if (segmentoId == null) {
+            return null;
+        }
+        return segmentRepository.findByIdAndTenantId(segmentoId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Segmento não encontrado"));
     }
 }

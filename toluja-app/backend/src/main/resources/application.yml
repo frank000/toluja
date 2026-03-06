@@ -1,13 +1,15 @@
 spring:
   datasource:
-    url: jdbc:sqlite:./data/pedido.db
-    driver-class-name: org.sqlite.JDBC
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/toluja}
+    username: ${SPRING_DATASOURCE_USERNAME:toluja}
+    password: ${SPRING_DATASOURCE_PASSWORD:toluja}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.community.dialect.SQLiteDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
   flyway:
     enabled: true
@@ -22,5 +24,12 @@ app:
     expiration-ms: 86400000
 
 printers:
-  printer1: tcp://192.168.0.101:9100
-  printer2: tcp://192.168.0.102:9100
+  mode: ${PRINTERS_MODE:agent}
+  printer1: ${PRINTERS_PRINTER1:IMPRESSORA1}
+  printer2: ${PRINTERS_PRINTER2:IMPRESSORA2}
+  printer3: ${PRINTERS_PRINTER3:IMPRESSORA3}
+  agent:
+    store-id: ${PRINTERS_AGENT_STORE_ID:store-001}
+    device-id: ${PRINTERS_AGENT_DEVICE_ID:agent-store-001}
+  connect-timeout-ms: ${PRINTERS_CONNECT_TIMEOUT_MS:3000}
+  cups-timeout-ms: ${PRINTERS_CUPS_TIMEOUT_MS:5000}

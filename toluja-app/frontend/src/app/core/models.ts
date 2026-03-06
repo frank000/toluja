@@ -31,13 +31,32 @@ export interface Item {
   nome: string;
   preco: number;
   ativo?: boolean;
+  segmento?: Segmento | null;
   categorias: SubitemCategoria[];
+}
+
+export interface PagedResponse<T> {
+  itens: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
 }
 
 export interface NovoItem {
   nome: string;
   preco: number;
   categoriaIds?: number[];
+  segmentoId?: number | null;
+}
+
+export interface Segmento {
+  id: number;
+  nome: string;
+  cor: string;
+  icone: string;
 }
 
 export interface PedidoItem {

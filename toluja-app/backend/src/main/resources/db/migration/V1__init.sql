@@ -1,39 +1,39 @@
 CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    nome_exibicao TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('ADMIN', 'ATENDENTE')),
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(80) NOT NULL UNIQUE,
+    password_hash VARCHAR(120) NOT NULL,
+    nome_exibicao VARCHAR(120) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'ATENDENTE')),
     ativo INTEGER NOT NULL DEFAULT 1,
     deve_trocar_senha INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL,
-    preco NUMERIC NOT NULL,
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    preco NUMERIC(10, 2) NOT NULL,
     ativo INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    codigo TEXT NOT NULL UNIQUE,
-    criado_em TEXT NOT NULL,
-    status TEXT NOT NULL,
-    total NUMERIC NOT NULL,
-    observacao TEXT,
+    id SERIAL PRIMARY KEY,
+    codigo VARCHAR(5) NOT NULL UNIQUE,
+    criado_em VARCHAR(40) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    total NUMERIC(12, 2) NOT NULL,
+    observacao VARCHAR(300),
     user_id INTEGER NOT NULL,
     CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE order_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL,
     item_id INTEGER NOT NULL,
-    nome_snapshot TEXT NOT NULL,
-    preco_snapshot NUMERIC NOT NULL,
+    nome_snapshot VARCHAR(255) NOT NULL,
+    preco_snapshot NUMERIC(10, 2) NOT NULL,
     quantidade INTEGER NOT NULL,
-    subtotal NUMERIC NOT NULL,
+    subtotal NUMERIC(12, 2) NOT NULL,
     CONSTRAINT fk_order_items_order FOREIGN KEY (order_id) REFERENCES orders(id),
     CONSTRAINT fk_order_items_item FOREIGN KEY (item_id) REFERENCES items(id)
 );
