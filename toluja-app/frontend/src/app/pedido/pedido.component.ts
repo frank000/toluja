@@ -31,7 +31,7 @@ export class PedidoComponent implements OnInit {
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
-    this.api.listarItens().subscribe((itens) => (this.itens = itens));
+    this.api.listarItens({ page: 0, size: 100 }).subscribe((response) => (this.itens = response.itens));
   }
 
   selecionarItem(item: Item): void {

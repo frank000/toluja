@@ -3,6 +3,10 @@ package com.toluja.app.item;
 import com.toluja.app.common.EntityMapper;
 import com.toluja.app.dto.ItemDtos;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,8 +25,31 @@ public class ItemService {
     private final SubitemCategoryRepository subitemCategoryRepository;
     private final EntityMapper mapper;
 
-    public List<ItemDtos.ItemResponse> listarAtivos(String tenantId) {
-        return itemRepository.findByAtivoTrueAndTenantId(tenantId).stream().map(mapper::toItemResponse).toList();
+    public ItemDtos.ItemPageResponse listarAtivos(String tenantId, String nome, Integer page, Integer size) {
+        int pagina = (page == null || page < 0) ? 0 : page;
+        int tamanho = (size == null || size < 1) ? 10 : Math.min(size, 100);
+        String filtroNome = nome == null ? "" : nome.trim();
+
+        Pageable pageable = PageRequest.of(
+                pagina,
+                tamanho,
+                Sort.by(Sort.Direction.ASC, "nome").and(Sort.by(Sort.Direction.ASC, "id"))
+        );
+
+        Page<Item> itensPage = filtroNome.isBlank()
+                ? itemRepository.findByAtivoTrueAndTenantId(tenantId, pageable)
+                : itemRepository.findByAtivoTrueAndTenantIdAndNomeContainingIgnoreCase(tenantId, filtroNome, pageable);
+
+        List<ItemDtos.ItemResponse> itens = itensPage.getContent().stream().map(mapper::toItemResponse).toList();
+        return new ItemDtos.ItemPageResponse(
+                itens,
+                itensPage.getNumber(),
+                itensPage.getSize(),
+                itensPage.getTotalElements(),
+                itensPage.getTotalPages(),
+                itensPage.isFirst(),
+                itensPage.isLast()
+        );
     }
 
     public ItemDtos.ItemResponse criar(ItemDtos.ItemRequest request, String tenantId) {

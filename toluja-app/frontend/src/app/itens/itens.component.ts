@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { Item, SubitemCategoria } from '../core/models';
@@ -8,7 +8,7 @@ import { Item, SubitemCategoria } from '../core/models';
 @Component({
   selector: 'app-itens',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './itens.component.html'
 })
 export class ItensComponent implements OnInit {
@@ -16,7 +16,17 @@ export class ItensComponent implements OnInit {
   categorias: SubitemCategoria[] = [];
   erro = '';
   sucesso = '';
+  filtroNome = '';
   categoriasExpandidas = new Set<number>();
+  secaoCadastrosExpandida = true;
+  secaoItensExpandida = true;
+
+  paginaAtual = 0;
+  tamanhoPagina = 10;
+  totalPaginas = 0;
+  totalItens = 0;
+  primeiraPagina = true;
+  ultimaPagina = true;
 
   categoriaForm = this.fb.group({
     nome: ['', Validators.required]
@@ -45,6 +55,44 @@ export class ItensComponent implements OnInit {
 
   ngOnInit(): void {
     this.recarregarTela();
+  }
+
+  toggleSecaoCadastros(): void {
+    this.secaoCadastrosExpandida = !this.secaoCadastrosExpandida;
+  }
+
+  toggleSecaoItens(): void {
+    this.secaoItensExpandida = !this.secaoItensExpandida;
+  }
+
+  aplicarFiltro(): void {
+    this.paginaAtual = 0;
+    this.carregarItens();
+  }
+
+  limparFiltro(): void {
+    this.filtroNome = '';
+    this.paginaAtual = 0;
+    this.carregarItens();
+  }
+
+  irParaPagina(page: number): void {
+    if (page < 0 || page >= this.totalPaginas || page === this.paginaAtual) {
+      return;
+    }
+    this.paginaAtual = page;
+    this.carregarItens();
+  }
+
+  paginasVisiveis(): number[] {
+    if (this.totalPaginas <= 0) {
+      return [];
+    }
+    const maxPaginas = 5;
+    const inicio = Math.max(0, this.paginaAtual - Math.floor(maxPaginas / 2));
+    const fim = Math.min(this.totalPaginas, inicio + maxPaginas);
+    const inicioAjustado = Math.max(0, fim - maxPaginas);
+    return Array.from({ length: fim - inicioAjustado }, (_, i) => inicioAjustado + i);
   }
 
   cadastrarCategoria(): void {
@@ -177,7 +225,24 @@ export class ItensComponent implements OnInit {
   }
 
   private carregarItens(): void {
-    this.api.listarItens().subscribe((itens) => (this.itens = itens));
+    this.api.listarItens({
+      nome: this.filtroNome,
+      page: this.paginaAtual,
+      size: this.tamanhoPagina
+    }).subscribe((response) => {
+      this.itens = response.itens;
+      this.paginaAtual = response.page;
+      this.tamanhoPagina = response.size;
+      this.totalPaginas = response.totalPages;
+      this.totalItens = response.totalElements;
+      this.primeiraPagina = response.first;
+      this.ultimaPagina = response.last;
+
+      if (this.paginaAtual > 0 && this.itens.length === 0 && this.totalItens > 0) {
+        this.paginaAtual -= 1;
+        this.carregarItens();
+      }
+    });
   }
 
   private carregarCategorias(): void {

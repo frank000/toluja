@@ -26,24 +26,24 @@ type config struct {
 }
 
 type nextJobResponse struct {
-	JobID        string        `json:"jobId"`
-	TenantID     string        `json:"tenantId"`
-	StoreID      string        `json:"storeId"`
-	DeviceID     string        `json:"deviceId"`
-	OrderID      string        `json:"orderId"`
-	PayloadType  string        `json:"payloadType"`
-	PayloadBase64 string       `json:"payloadBase64"`
-	CreatedAt    string        `json:"createdAt"`
-	Deliveries   []jobDelivery `json:"deliveries"`
+	JobID         string        `json:"jobId"`
+	TenantID      string        `json:"tenantId"`
+	StoreID       string        `json:"storeId"`
+	DeviceID      string        `json:"deviceId"`
+	OrderID       string        `json:"orderId"`
+	PayloadType   string        `json:"payloadType"`
+	PayloadBase64 string        `json:"payloadBase64"`
+	CreatedAt     string        `json:"createdAt"`
+	Deliveries    []jobDelivery `json:"deliveries"`
 }
 
 type jobDelivery struct {
-	DeliveryID string `json:"deliveryId"`
-	PrinterID  string `json:"printerId"`
+	DeliveryID  string `json:"deliveryId"`
+	PrinterID   string `json:"printerId"`
 	PrinterName string `json:"printerName"`
-	Channel    string `json:"channel"`
+	Channel     string `json:"channel"`
 	Destination string `json:"destination"`
-	Copies     int    `json:"copies"`
+	Copies      int    `json:"copies"`
 }
 
 type ackRequest struct {
@@ -51,11 +51,17 @@ type ackRequest struct {
 }
 
 type deliveryAck struct {
-	DeliveryID  string    `json:"deliveryId"`
-	Status      string    `json:"status"`
-	ErrorMessage *string  `json:"errorMessage"`
-	PrintedAt   time.Time `json:"printedAt"`
+	DeliveryID   string    `json:"deliveryId"`
+	Status       string    `json:"status"`
+	ErrorMessage *string   `json:"errorMessage"`
+	PrintedAt    time.Time `json:"printedAt"`
 }
+
+var (
+	version   = "dev"
+	commit    = "none"
+	buildTime = "unknown"
+)
 
 func main() {
 	loadDotEnvIfPresent()
@@ -66,16 +72,45 @@ func main() {
 	}
 
 	client := &http.Client{Timeout: 20 * time.Second}
+	runningAsService, err := runAsWindowsService(func(stop <-chan struct{}) error {
+		return runLoop(client, cfg, stop)
+	})
+	if err != nil {
+		panic(err)
+	}
+	if runningAsService {
+		return
+	}
+
+	stop := make(chan struct{})
+	if err := runLoop(client, cfg, stop); err != nil {
+		panic(err)
+	}
+}
+
+func runLoop(client *http.Client, cfg config, stop <-chan struct{}) error {
 	ticker := time.NewTicker(time.Duration(cfg.PollIntervalMs) * time.Millisecond)
 	defer ticker.Stop()
 
-	fmt.Printf("agent started device=%s api=%s\n", cfg.DeviceID, cfg.APIBaseURL)
+	fmt.Printf(
+		"agent started device=%s api=%s version=%s commit=%s buildTime=%s\n",
+		cfg.DeviceID,
+		cfg.APIBaseURL,
+		version,
+		commit,
+		buildTime,
+	)
 
 	for {
 		if err := runOnce(client, cfg); err != nil {
 			fmt.Printf("loop error: %v\n", err)
 		}
-		<-ticker.C
+
+		select {
+		case <-stop:
+			return nil
+		case <-ticker.C:
+		}
 	}
 }
 
@@ -143,10 +178,10 @@ func printDelivery(d jobDelivery, payload []byte) deliveryAck {
 	if err != nil {
 		msg := err.Error()
 		return deliveryAck{
-			DeliveryID:  d.DeliveryID,
-			Status:      "ERROR",
+			DeliveryID:   d.DeliveryID,
+			Status:       "ERROR",
 			ErrorMessage: &msg,
-			PrintedAt:   now,
+			PrintedAt:    now,
 		}
 	}
 
@@ -253,7 +288,7 @@ func loadConfig() (config, error) {
 		}
 	}
 
-		cfg := config{
+	cfg := config{
 		APIBaseURL:     strings.TrimSpace(os.Getenv("API_BASE_URL")),
 		DeviceID:       strings.TrimSpace(os.Getenv("DEVICE_ID")),
 		PrintKey:       strings.TrimSpace(os.Getenv("PRINT_KEY")),

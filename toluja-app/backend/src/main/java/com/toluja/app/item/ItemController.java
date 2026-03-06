@@ -10,11 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/itens")
@@ -24,8 +23,13 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public List<ItemDtos.ItemResponse> listar(Authentication authentication) {
-        return service.listarAtivos(AuthContext.tenantId(authentication));
+    public ItemDtos.ItemPageResponse listar(
+            @RequestParam(required = false) String nome,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            Authentication authentication
+    ) {
+        return service.listarAtivos(AuthContext.tenantId(authentication), nome, page, size);
     }
 
     @PostMapping

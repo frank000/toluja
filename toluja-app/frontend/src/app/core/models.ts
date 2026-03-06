@@ -34,6 +34,16 @@ export interface Item {
   categorias: SubitemCategoria[];
 }
 
+export interface PagedResponse<T> {
+  itens: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
 export interface NovoItem {
   nome: string;
   preco: number;

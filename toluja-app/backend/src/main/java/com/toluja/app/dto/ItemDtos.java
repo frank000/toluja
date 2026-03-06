@@ -18,6 +18,15 @@ public class ItemDtos {
             @NotNull @DecimalMin("0.01") BigDecimal preco
     ) {}
     public record ItemResponse(Integer id, String nome, BigDecimal preco, Boolean ativo, List<SubitemCategoryResponse> categorias) {}
+    public record ItemPageResponse(
+            List<ItemResponse> itens,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages,
+            boolean first,
+            boolean last
+    ) {}
 
     public record SubitemCategoryRequest(@NotBlank String nome) {}
     public record SubitemRequest(@NotBlank String nome, @NotNull @DecimalMin("0.00") BigDecimal preco) {}
