@@ -30,6 +30,20 @@
               <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
               <button class="btn btn-outline-primary" type="submit">Salvar subitem</button>
             </form>
+
+            <hr class="my-4" />
+
+            <h6 class="mb-2">Novo segmento</h6>
+            <form [formGroup]="segmentoForm" (ngSubmit)="cadastrarSegmento()" class="d-grid gap-2">
+              <input class="form-control" formControlName="nome" placeholder="Ex: Bebidas" />
+              <div class="d-flex gap-2">
+                <input class="form-control form-control-color" type="color" formControlName="cor" title="Cor do segmento" />
+                <select class="form-select" formControlName="icone">
+                  <option *ngFor="let icone of iconesBasicos" [ngValue]="icone.value">{{ icone.label }}</option>
+                </select>
+              </div>
+              <button class="btn btn-outline-dark" type="submit">Salvar segmento</button>
+            </form>
           </div>
         </div>
       </div>
@@ -78,6 +92,10 @@
             <form [formGroup]="itemForm" (ngSubmit)="cadastrarItem()" class="d-grid gap-2">
               <input class="form-control" formControlName="nome" placeholder="Nome do item" />
               <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço base" />
+              <select class="form-select" formControlName="segmentoId">
+                <option [ngValue]="null">Sem segmento</option>
+                <option *ngFor="let segmento of segmentos" [ngValue]="segmento.id">{{ segmento.nome }}</option>
+              </select>
 
               <label class="form-label mt-2 mb-1">Categorias permitidas</label>
               <div class="border rounded p-2" style="max-height: 190px; overflow: auto;">

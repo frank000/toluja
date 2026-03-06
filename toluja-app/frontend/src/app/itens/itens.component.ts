@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
-import { Item, SubitemCategoria } from '../core/models';
+import { Item, Segmento, SubitemCategoria } from '../core/models';
 
 @Component({
   selector: 'app-itens',
@@ -14,6 +14,7 @@ import { Item, SubitemCategoria } from '../core/models';
 export class ItensComponent implements OnInit {
   itens: Item[] = [];
   categorias: SubitemCategoria[] = [];
+  segmentos: Segmento[] = [];
   erro = '';
   sucesso = '';
   filtroNome = '';
@@ -40,7 +41,14 @@ export class ItensComponent implements OnInit {
 
   itemForm = this.fb.group({
     nome: ['', Validators.required],
-    preco: [0, [Validators.required, Validators.min(0.01)]]
+    preco: [0, [Validators.required, Validators.min(0.01)]],
+    segmentoId: [null as number | null]
+  });
+
+  segmentoForm = this.fb.group({
+    nome: ['', Validators.required],
+    cor: ['#1A73E8', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
+    icone: ['bi-tag', Validators.required]
   });
 
   edicaoForm = this.fb.group({
@@ -50,6 +58,15 @@ export class ItensComponent implements OnInit {
 
   categoriaIdsSelecionadas = new Set<number>();
   itemEmEdicaoId: number | null = null;
+  readonly iconesBasicos = [
+    { value: 'bi-cup-straw', label: 'Bebidas' },
+    { value: 'bi-cup-hot', label: 'Café/Chá' },
+    { value: 'bi-egg-fried', label: 'Refeições' },
+    { value: 'bi-basket2', label: 'Mercado' },
+    { value: 'bi-ice-cream', label: 'Sobremesas' },
+    { value: 'bi-star', label: 'Destaques' },
+    { value: 'bi-tag', label: 'Geral' }
+  ];
 
   constructor(private fb: FormBuilder, private api: ApiService, public auth: AuthService) {}
 
@@ -127,6 +144,26 @@ export class ItensComponent implements OnInit {
     });
   }
 
+  cadastrarSegmento(): void {
+    if (this.segmentoForm.invalid || !this.auth.isAdmin()) return;
+    this.sucesso = '';
+    const value = this.segmentoForm.getRawValue();
+    const nome = value.nome?.trim();
+    const cor = value.cor?.trim();
+    const icone = value.icone?.trim();
+
+    if (!nome || !cor || !icone) return;
+
+    this.api.criarSegmento({ nome, cor, icone }).subscribe({
+      next: () => {
+        this.segmentoForm.reset({ nome: '', cor: '#1A73E8', icone: 'bi-tag' });
+        this.sucesso = 'Segmento cadastrado com sucesso.';
+        this.carregarSegmentos();
+      },
+      error: () => (this.erro = 'Não foi possível cadastrar segmento.')
+    });
+  }
+
   cadastrarItem(): void {
     if (this.itemForm.invalid || !this.auth.isAdmin()) return;
     this.sucesso = '';
@@ -135,10 +172,11 @@ export class ItensComponent implements OnInit {
     this.api.criarItem({
       nome: value.nome || '',
       preco: value.preco || 0,
-      categoriaIds: Array.from(this.categoriaIdsSelecionadas)
+      categoriaIds: Array.from(this.categoriaIdsSelecionadas),
+      segmentoId: value.segmentoId
     }).subscribe({
       next: () => {
-        this.itemForm.reset({ nome: '', preco: 0 });
+        this.itemForm.reset({ nome: '', preco: 0, segmentoId: null });
         this.categoriaIdsSelecionadas.clear();
         this.sucesso = 'Item cadastrado com sucesso.';
         this.carregarItens();
@@ -222,6 +260,7 @@ export class ItensComponent implements OnInit {
   private recarregarTela(): void {
     this.carregarItens();
     this.carregarCategorias();
+    this.carregarSegmentos();
   }
 
   private carregarItens(): void {
@@ -254,6 +293,12 @@ export class ItensComponent implements OnInit {
           this.categoriasExpandidas.delete(id);
         }
       });
+    });
+  }
+
+  private carregarSegmentos(): void {
+    this.api.listarSegmentos().subscribe((segmentos) => {
+      this.segmentos = segmentos;
     });
   }
 

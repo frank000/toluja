@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
-import { Item, PedidoItem, Subitem } from '../core/models';
+import { Item, PedidoItem, Segmento, Subitem } from '../core/models';
 
 type CarrinhoEntry = {
   key: string;
@@ -20,10 +20,12 @@ type CarrinhoEntry = {
 })
 export class PedidoComponent implements OnInit {
   itens: Item[] = [];
+  segmentos: Segmento[] = [];
   carrinho: Record<string, CarrinhoEntry> = {};
   observacao = '';
   mensagemSucesso = '';
   erro = '';
+  abaSegmentoAtiva: number | 'sem-segmento' | null = null;
 
   itemEmConfiguracao: Item | null = null;
   subitemIdsSelecionados = new Set<number>();
@@ -31,7 +33,8 @@ export class PedidoComponent implements OnInit {
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
-    this.api.listarItens({ page: 0, size: 100 }).subscribe((response) => (this.itens = response.itens));
+    this.carregarSegmentos();
+    this.carregarTodosItens(0, []);
   }
 
   selecionarItem(item: Item): void {
@@ -161,5 +164,65 @@ export class PedidoComponent implements OnInit {
 
   private formatarSenha(senha: number): string {
     return senha.toString().padStart(2, '0');
+  }
+
+  get itensDaAbaAtiva(): Item[] {
+    if (this.abaSegmentoAtiva === null) {
+      return this.itens;
+    }
+    if (this.abaSegmentoAtiva === 'sem-segmento') {
+      return this.itens.filter((item) => !item.segmento);
+    }
+    return this.itens.filter((item) => item.segmento?.id === this.abaSegmentoAtiva);
+  }
+
+  selecionarAbaSegmento(abaId: number | 'sem-segmento'): void {
+    this.abaSegmentoAtiva = abaId;
+  }
+
+  hasItensSemSegmento(): boolean {
+    return this.itens.some((item) => !item.segmento);
+  }
+
+  private carregarSegmentos(): void {
+    this.api.listarSegmentos().subscribe({
+      next: (segmentos) => {
+        this.segmentos = segmentos;
+        this.ajustarAbaAtiva();
+      },
+      error: () => (this.erro = 'Falha ao carregar segmentos.')
+    });
+  }
+
+  private carregarTodosItens(page: number, acumulado: Item[]): void {
+    this.api.listarItens({ page, size: 100 }).subscribe({
+      next: (response) => {
+        const novosItens = [...acumulado, ...response.itens];
+        if (response.last) {
+          this.itens = novosItens;
+          this.ajustarAbaAtiva();
+          return;
+        }
+        this.carregarTodosItens(page + 1, novosItens);
+      },
+      error: () => (this.erro = 'Falha ao carregar itens.')
+    });
+  }
+
+  private ajustarAbaAtiva(): void {
+    const idsSegmentos = new Set(this.segmentos.map((segmento) => segmento.id));
+    const existeSemSegmento = this.hasItensSemSegmento();
+
+    if (typeof this.abaSegmentoAtiva === 'number' && idsSegmentos.has(this.abaSegmentoAtiva)) {
+      return;
+    }
+    if (this.abaSegmentoAtiva === 'sem-segmento' && existeSemSegmento) {
+      return;
+    }
+    if (this.segmentos.length > 0) {
+      this.abaSegmentoAtiva = this.segmentos[0].id;
+      return;
+    }
+    this.abaSegmentoAtiva = existeSemSegmento ? 'sem-segmento' : null;
   }
 }

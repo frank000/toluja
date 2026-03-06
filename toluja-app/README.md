@@ -177,3 +177,57 @@ Para apagar também o volume do banco:
 ```bash
 docker compose down -v
 ```
+
+## Deploy na Contabo com imagem gerada no GitHub
+
+Este repositório já possui workflow para build/push de imagens Docker no GHCR:
+
+- Workflow: `.github/workflows/docker-images.yml`
+- Imagens publicadas:
+  - `ghcr.io/<owner>/toluja-backend:latest`
+  - `ghcr.io/<owner>/toluja-frontend:latest`
+
+### 1) Build automático no GitHub
+
+Ao fazer push na branch `main` (ou rodar manualmente no Actions), o GitHub gera e publica as imagens.
+
+### 2) Preparar VPS (Contabo)
+
+Na VPS:
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin
+sudo usermod -aG docker $USER
+```
+
+Faça logout/login novamente para aplicar grupo docker.
+
+### 3) Subir containers na VPS
+
+Copie para a VPS:
+
+- `docker-compose.prod.yml`
+- `.env.prod.example` (renomeie para `.env.prod`)
+
+Edite `.env.prod` com seus valores reais (imagens, senha do banco, JWT e domínio).
+
+Login no GHCR com token do GitHub (`read:packages`):
+
+```bash
+echo "<SEU_GHCR_TOKEN>" | docker login ghcr.io -u <SEU_USUARIO_GITHUB> --password-stdin
+```
+
+Suba os containers:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml pull
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+```
+
+Para atualizar depois de novo push:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml pull
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+```

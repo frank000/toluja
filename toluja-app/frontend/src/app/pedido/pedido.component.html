@@ -1,7 +1,32 @@
 <div class="row g-4">
   <div class="col-12 col-lg-8">
+    <ul class="nav nav-tabs mb-3" *ngIf="segmentos.length || hasItensSemSegmento()">
+      <li class="nav-item" *ngFor="let segmento of segmentos">
+        <button
+          type="button"
+          class="nav-link"
+          [class.active]="abaSegmentoAtiva === segmento.id"
+          (click)="selecionarAbaSegmento(segmento.id)"
+        >
+          <span [style.color]="segmento.cor">
+            <i class="bi me-1" [ngClass]="segmento.icone"></i>{{ segmento.nome }}
+          </span>
+        </button>
+      </li>
+      <li class="nav-item" *ngIf="hasItensSemSegmento()">
+        <button
+          type="button"
+          class="nav-link"
+          [class.active]="abaSegmentoAtiva === 'sem-segmento'"
+          (click)="selecionarAbaSegmento('sem-segmento')"
+        >
+          <span class="text-secondary"><i class="bi bi-tag me-1"></i>Sem segmento</span>
+        </button>
+      </li>
+    </ul>
+
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
-      <div class="col" *ngFor="let item of itens">
+      <div class="col" *ngFor="let item of itensDaAbaAtiva">
         <div class="card h-100 shadow-sm cursor-pointer" (click)="selecionarItem(item)">
           <div class="card-body d-flex flex-column justify-content-between">
             <h6 class="card-title mb-2">{{ item.nome }}</h6>
@@ -10,6 +35,10 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="alert alert-light border mt-3 mb-0" *ngIf="itensDaAbaAtiva.length === 0">
+      Nenhum item disponível neste segmento.
     </div>
 
     <div class="card shadow-sm mt-4" *ngIf="itemEmConfiguracao">

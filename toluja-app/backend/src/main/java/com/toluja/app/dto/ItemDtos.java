@@ -11,13 +11,21 @@ public class ItemDtos {
     public record ItemRequest(
             @NotBlank String nome,
             @NotNull @DecimalMin("0.01") BigDecimal preco,
-            List<Integer> categoriaIds
+            List<Integer> categoriaIds,
+            Integer segmentoId
     ) {}
     public record ItemUpdateRequest(
             @NotBlank String nome,
             @NotNull @DecimalMin("0.01") BigDecimal preco
     ) {}
-    public record ItemResponse(Integer id, String nome, BigDecimal preco, Boolean ativo, List<SubitemCategoryResponse> categorias) {}
+    public record ItemResponse(
+            Integer id,
+            String nome,
+            BigDecimal preco,
+            Boolean ativo,
+            SegmentResponse segmento,
+            List<SubitemCategoryResponse> categorias
+    ) {}
     public record ItemPageResponse(
             List<ItemResponse> itens,
             int page,
@@ -27,6 +35,8 @@ public class ItemDtos {
             boolean first,
             boolean last
     ) {}
+    public record SegmentRequest(@NotBlank String nome, @NotBlank String cor, @NotBlank String icone) {}
+    public record SegmentResponse(Integer id, String nome, String cor, String icone) {}
 
     public record SubitemCategoryRequest(@NotBlank String nome) {}
     public record SubitemRequest(@NotBlank String nome, @NotNull @DecimalMin("0.00") BigDecimal preco) {}

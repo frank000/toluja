@@ -23,6 +23,7 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final SubitemCategoryRepository subitemCategoryRepository;
+    private final SegmentRepository segmentRepository;
     private final EntityMapper mapper;
 
     public ItemDtos.ItemPageResponse listarAtivos(String tenantId, String nome, Integer page, Integer size) {
@@ -53,11 +54,17 @@ public class ItemService {
     }
 
     public ItemDtos.ItemResponse criar(ItemDtos.ItemRequest request, String tenantId) {
+        String nome = request.nome().trim();
+        if (itemRepository.existsByTenantIdAndNomeIgnoreCaseAndAtivoTrue(tenantId, nome)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Já existe item ativo com esse nome");
+        }
+
         Item item = new Item();
-        item.setNome(request.nome());
+        item.setNome(nome);
         item.setPreco(request.preco());
         item.setTenantId(tenantId);
         item.setAtivo(true);
+        item.setSegment(buscarSegmento(request.segmentoId(), tenantId));
         item.setCategorias(buscarCategorias(request.categoriaIds(), tenantId));
         return mapper.toItemResponse(itemRepository.save(item));
     }
@@ -66,7 +73,12 @@ public class ItemService {
         Item item = itemRepository.findByIdAndAtivoTrueAndTenantId(itemId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Item não encontrado"));
 
-        item.setNome(request.nome().trim());
+        String nome = request.nome().trim();
+        if (itemRepository.existsByTenantIdAndNomeIgnoreCaseAndAtivoTrueAndIdNot(tenantId, nome, itemId)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Já existe item ativo com esse nome");
+        }
+
+        item.setNome(nome);
         item.setPreco(request.preco());
         return mapper.toItemResponse(itemRepository.save(item));
     }
@@ -91,5 +103,13 @@ public class ItemService {
             throw new ResponseStatusException(BAD_REQUEST, "Categoria sem subitens não pode ser associada ao item");
         }
         return new HashSet<>(categorias);
+    }
+
+    private Segment buscarSegmento(Integer segmentoId, String tenantId) {
+        if (segmentoId == null) {
+            return null;
+        }
+        return segmentRepository.findByIdAndTenantId(segmentoId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Segmento não encontrado"));
     }
 }

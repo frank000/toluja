@@ -27,13 +27,14 @@ public class SubitemCatalogService {
     }
 
     public ItemDtos.SubitemCategoryResponse criarCategoria(ItemDtos.SubitemCategoryRequest request, String tenantId) {
-        subitemCategoryRepository.findByNomeIgnoreCaseAndTenantId(request.nome(), tenantId)
+        String nomeCategoria = request.nome().trim();
+        subitemCategoryRepository.findByNomeIgnoreCaseAndTenantId(nomeCategoria, tenantId)
                 .ifPresent(categoria -> {
                     throw new ResponseStatusException(BAD_REQUEST, "Já existe uma categoria com esse nome");
                 });
 
         SubitemCategory categoria = new SubitemCategory();
-        categoria.setNome(request.nome().trim());
+        categoria.setNome(nomeCategoria);
         categoria.setTenantId(tenantId);
         return mapper.toSubitemCategoryResponse(subitemCategoryRepository.save(categoria));
     }
@@ -42,15 +43,19 @@ public class SubitemCatalogService {
         SubitemCategory categoria = subitemCategoryRepository.findByIdAndTenantId(categoriaId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Categoria não encontrada"));
 
+        String nomeSubitem = request.nome().trim();
         boolean nomeDuplicado = categoria.getSubitens().stream()
-                .anyMatch(subitem -> subitem.getNome().equalsIgnoreCase(request.nome().trim()));
+                .anyMatch(subitem ->
+                        Boolean.TRUE.equals(subitem.getAtivo()) &&
+                                subitem.getNome().equalsIgnoreCase(nomeSubitem)
+                );
         if (nomeDuplicado) {
             throw new ResponseStatusException(BAD_REQUEST, "Já existe subitem com esse nome na categoria");
         }
 
         Subitem subitem = new Subitem();
         subitem.setCategoria(categoria);
-        subitem.setNome(request.nome().trim());
+        subitem.setNome(nomeSubitem);
         subitem.setPreco(request.preco());
         subitem.setTenantId(tenantId);
         subitem.setAtivo(true);

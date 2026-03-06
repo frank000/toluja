@@ -12,4 +12,6 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
     Page<Item> findByAtivoTrueAndTenantId(String tenantId, Pageable pageable);
     Page<Item> findByAtivoTrueAndTenantIdAndNomeContainingIgnoreCase(String tenantId, String nome, Pageable pageable);
     Optional<Item> findByIdAndAtivoTrueAndTenantId(Integer id, String tenantId);
+    boolean existsByTenantIdAndNomeIgnoreCaseAndAtivoTrue(String tenantId, String nome);
+    boolean existsByTenantIdAndNomeIgnoreCaseAndAtivoTrueAndIdNot(String tenantId, String nome, Integer id);
 }

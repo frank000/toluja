@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,6 +42,10 @@ public class Item {
     @Convert(converter = BooleanToIntegerConverter.class)
     @Column(nullable = false)
     private Boolean ativo;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "segment_id")
+    private Segment segment;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
