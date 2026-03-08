@@ -11,7 +11,7 @@
     <div class="login-form-panel">
       <h4 class="mb-4 text-center">{{ painelMode ? 'Entrar no Painel Superadmin' : 'Entrar' }}</h4>
       <form [formGroup]="form" (ngSubmit)="submit()" class="d-grid gap-3">
-        <div>
+        <div *ngIf="!painelMode">
           <label class="form-label">Tenant</label>
           <select class="form-select" formControlName="tenantId" [disabled]="carregandoTenants">
             <option *ngFor="let tenant of tenants" [value]="tenant.tenantId">{{ tenant.tenantId }}</option>

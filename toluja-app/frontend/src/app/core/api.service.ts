@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { HttpParams } from '@angular/common/http';
-import { CreatedTenant, Item, NovoItem, PagedResponse, Pedido, PedidoItem, Segmento, SubitemCategoria, TenantSummary } from './models';
+import { CreatedTenant, Item, NovoItem, PagedResponse, Pedido, PedidoGuestPayload, PedidoItem, Segmento, SubitemCategoria, TenantConfig, TenantSummary } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -89,8 +89,8 @@ export class ApiService {
     return this.http.post<Pedido>('/api/pedidos', { itens, observacao });
   }
 
-  criarPedidoGuest(tenantId: string, itens: PedidoItem[], observacao?: string) {
-    return this.http.post<Pedido>(`/api/public/tenants/${encodeURIComponent(tenantId)}/pedidos`, { itens, observacao });
+  criarPedidoGuest(tenantId: string, payload: PedidoGuestPayload) {
+    return this.http.post<Pedido>(`/api/public/tenants/${encodeURIComponent(tenantId)}/pedidos`, payload);
   }
 
   listarPedidos() {
@@ -119,6 +119,18 @@ export class ApiService {
 
   listarSegmentosGuest(tenantId: string) {
     return this.http.get<Segmento[]>(`/api/public/tenants/${encodeURIComponent(tenantId)}/segmentos`);
+  }
+
+  obterConfiguracaoGuest(tenantId: string) {
+    return this.http.get<TenantConfig>(`/api/public/tenants/${encodeURIComponent(tenantId)}/configuracao`);
+  }
+
+  obterConfiguracaoTenant() {
+    return this.http.get<TenantConfig>('/api/configuracao/tenant');
+  }
+
+  salvarConfiguracaoTenant(payload: TenantConfig) {
+    return this.http.put<TenantConfig>('/api/configuracao/tenant', payload);
   }
 
   listarTenantsPainel() {

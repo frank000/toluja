@@ -1,0 +1,45 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Configuração</h5>
+
+    <div class="form-check form-switch mb-2">
+      <input class="form-check-input" type="checkbox" id="entregaAtiva" [(ngModel)]="entregaAtiva" [disabled]="carregando || salvando" />
+      <label class="form-check-label" for="entregaAtiva">Ativar entrega</label>
+    </div>
+    <p class="text-muted small mb-3">
+      Se ativo, a tela de pedido do guest habilita a opção <strong>Entrega</strong> no fechamento do pedido.
+    </p>
+
+    <div class="mb-3">
+      <label class="form-label">Informação de tela de resumo</label>
+      <textarea
+        class="form-control"
+        rows="3"
+        maxlength="500"
+        [(ngModel)]="informacaoTelaResumo"
+        [disabled]="carregando || salvando"
+        placeholder="Texto exibido na tela de Resumo do Pedido para orientar o cliente final."
+      ></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Número WhatsApp da empresa</label>
+      <input
+        class="form-control"
+        type="text"
+        [value]="whatsappNumero"
+        (input)="aoDigitarWhatsapp($event)"
+        [disabled]="carregando || salvando"
+        placeholder="(55) 11 99999-9999"
+      />
+      <div class="form-text">Formato: (55) + DDD + número.</div>
+    </div>
+
+    <button class="btn btn-primary" type="button" (click)="salvar()" [disabled]="carregando || salvando">
+      {{ salvando ? 'Salvando...' : 'Salvar configuração' }}
+    </button>
+
+    <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+    <div class="alert alert-success mt-3 mb-0" *ngIf="sucesso">{{ sucesso }}</div>
+  </div>
+</div>

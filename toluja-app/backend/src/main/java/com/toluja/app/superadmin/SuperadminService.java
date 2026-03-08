@@ -61,6 +61,7 @@ public class SuperadminService {
         tenant.setNome(request.nome().trim());
         tenant.setPrintKeyHash(printKeyHash);
         tenant.setAtivo(true);
+        tenant.setEntregaAtiva(false);
         Tenant salvo = tenantRepository.save(tenant);
 
         return new SuperadminDtos.CreateTenantResponse(
@@ -110,8 +111,11 @@ public class SuperadminService {
             Tenant tenant = existing.get();
             if (tenant.getPrintKeyHash() == null || tenant.getPrintKeyHash().isBlank()) {
                 tenant.setPrintKeyHash(printKeyService.hash("dev-print-key-default"));
-                tenantRepository.save(tenant);
             }
+            if (tenant.getEntregaAtiva() == null) {
+                tenant.setEntregaAtiva(false);
+            }
+            tenantRepository.save(tenant);
             return;
         }
         Tenant tenant = new Tenant();
@@ -119,6 +123,7 @@ public class SuperadminService {
         tenant.setNome("Tenant Padrão");
         tenant.setPrintKeyHash(printKeyService.hash("dev-print-key-default"));
         tenant.setAtivo(true);
+        tenant.setEntregaAtiva(false);
         tenantRepository.save(tenant);
     }
 

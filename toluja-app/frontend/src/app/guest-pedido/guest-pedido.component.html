@@ -94,14 +94,137 @@
 
         <div class="mb-3">
           <label class="form-label">Observação</label>
-          <textarea class="form-control" rows="2" [(ngModel)]="observacao"></textarea>
+          <textarea class="form-control" rows="2" [(ngModel)]="observacao" (ngModelChange)="onDraftChange()"></textarea>
         </div>
 
         <p class="fs-5">Total: <strong>R$ {{ total | number:'1.2-2' }}</strong></p>
         <button class="btn btn-success w-100" (click)="enviarPedido()">Enviar pedido</button>
+        <button
+          class="btn btn-outline-primary w-100 mt-2"
+          type="button"
+          *ngIf="resumoPedidoAtual"
+          (click)="abrirUltimoResumo()"
+        >
+          Ver último resumo
+        </button>
 
         <div class="alert alert-success mt-3 mb-0" *ngIf="mensagemSucesso">{{ mensagemSucesso }}</div>
         <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop-custom" *ngIf="modalFechamentoAberto" (click)="fecharModalFechamento()"></div>
+<div class="modal modal-custom d-block" *ngIf="modalFechamentoAberto" tabindex="-1" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Resumo do Pedido</h5>
+        <button type="button" class="btn-close" aria-label="Fechar" [disabled]="enviandoPedido" (click)="fecharModalFechamento()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-grid gap-3" *ngIf="etapaModalResumo === 'FORMULARIO'; else resumoFinalTemplate">
+          <div>
+            <label class="form-label">Nome <span class="text-danger">*</span></label>
+            <input class="form-control" type="text" [(ngModel)]="clienteNome" (ngModelChange)="onDraftChange()" [disabled]="enviandoPedido" />
+          </div>
+          <div>
+            <label class="form-label">Telefone <span class="text-danger">*</span></label>
+            <input class="form-control" type="text" [(ngModel)]="clienteTelefone" (ngModelChange)="onDraftChange()" [disabled]="enviandoPedido" />
+          </div>
+          <div>
+            <label class="form-label">Tipo de atendimento</label>
+            <div class="d-grid gap-2" *ngIf="entregaAtiva; else somenteRetiradaTemplate">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="tipoAtendimento"
+                  id="tipoAtendimentoRetirada"
+                  [checked]="!atendimentoEntrega"
+                  [disabled]="enviandoPedido"
+                  (change)="atendimentoEntrega = false; onDraftChange()"
+                />
+                <label class="form-check-label" for="tipoAtendimentoRetirada">
+                  Retirada
+                </label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="tipoAtendimento"
+                  id="tipoAtendimentoEntrega"
+                  [checked]="atendimentoEntrega"
+                  [disabled]="enviandoPedido"
+                  (change)="atendimentoEntrega = true; onDraftChange()"
+                />
+                <label class="form-check-label" for="tipoAtendimentoEntrega">
+                  Entrega
+                </label>
+              </div>
+            </div>
+            <ng-template #somenteRetiradaTemplate>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="tipoAtendimentoSomenteRetirada"
+                  [checked]="false"
+                  disabled
+                />
+                <label class="form-check-label" for="tipoAtendimentoSomenteRetirada">
+                  Retirada
+                </label>
+              </div>
+              <small class="text-muted d-block mt-1">Entrega indisponível para este tenant.</small>
+            </ng-template>
+          </div>
+          <div class="alert alert-info mb-0 py-2" *ngIf="informacaoTelaResumo">
+            {{ informacaoTelaResumo }}
+          </div>
+          <div class="alert alert-danger mb-0 py-2" *ngIf="erroModalResumo">
+            {{ erroModalResumo }}
+          </div>
+        </div>
+        <ng-template #resumoFinalTemplate>
+          <div *ngIf="resumoPedidoAtual as resumo" class="d-grid gap-2">
+            <div><strong>Código:</strong> {{ resumo.codigo }}</div>
+            <div><strong>Senha:</strong> {{ resumo.senhaChamada | number:'2.0-0' }}</div>
+            <div><strong>Data/Hora:</strong> {{ resumo.criadoEm | date:'short':'':'pt-BR' }}</div>
+            <div><strong>Cliente:</strong> {{ resumo.clienteNome }}</div>
+            <div><strong>Telefone:</strong> {{ resumo.clienteTelefone }}</div>
+            <div><strong>Atendimento:</strong> {{ resumo.tipoAtendimento }}</div>
+            <div><strong>Total:</strong> R$ {{ resumo.total | number:'1.2-2' }}</div>
+            <div *ngIf="resumo.observacao"><strong>Observação:</strong> {{ resumo.observacao }}</div>
+            <hr class="my-2" />
+            <div><strong>Itens:</strong></div>
+            <div class="small" *ngFor="let item of resumo.itens">
+              - {{ item.nome }} x{{ item.quantidade }} (R$ {{ item.subtotal | number:'1.2-2' }})
+              <div class="text-muted" *ngIf="item.subitens.length">Adicionais: {{ item.subitens.join(', ') }}</div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+      <div class="modal-footer">
+        <ng-container *ngIf="etapaModalResumo === 'FORMULARIO'; else resumoFooterTemplate">
+          <button type="button" class="btn btn-outline-secondary" [disabled]="enviandoPedido" (click)="fecharModalFechamento()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-success" [disabled]="enviandoPedido" (click)="confirmarEnvioPedido()">
+            {{ enviandoPedido ? 'Enviando...' : 'Confirmar pedido' }}
+          </button>
+        </ng-container>
+        <ng-template #resumoFooterTemplate>
+          <button type="button" class="btn btn-outline-secondary" (click)="fecharModalFechamento()">Fechar</button>
+          <button type="button" class="btn btn-success" [disabled]="!hasWhatsappEmpresa()" (click)="acompanharNoWhatsapp()">
+            Acompanhar no WhatsApp
+          </button>
+        </ng-template>
+      </div>
+      <div class="px-3 pb-3 small text-muted" *ngIf="etapaModalResumo === 'RESULTADO' && !hasWhatsappEmpresa()">
+        WhatsApp da empresa não configurado.
       </div>
     </div>
   </div>

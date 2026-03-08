@@ -11,6 +11,7 @@
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/itens">Itens</a></li>
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/pedido">Novo Pedido</a></li>
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/pedidos">Pedidos</a></li>
+          <li class="nav-item" *ngIf="!mustChangePassword() && isAdmin()"><a class="nav-link" routerLink="/configuracao">Configuração</a></li>
           <li class="nav-item" *ngIf="mustChangePassword()"><a class="nav-link" routerLink="/trocar-senha">Trocar senha</a></li>
         </ul>
 
@@ -18,6 +19,7 @@
           <a class="btn btn-outline-light btn-sm" routerLink="/itens" title="Itens" aria-label="Itens"><i class="bi bi-grid"></i></a>
           <a class="btn btn-outline-light btn-sm" routerLink="/pedido" title="Novo Pedido" aria-label="Novo Pedido"><i class="bi bi-plus-square"></i></a>
           <a class="btn btn-outline-light btn-sm" routerLink="/pedidos" title="Pedidos" aria-label="Pedidos"><i class="bi bi-card-list"></i></a>
+          <a class="btn btn-outline-light btn-sm" *ngIf="isAdmin()" routerLink="/configuracao" title="Configuração" aria-label="Configuração"><i class="bi bi-gear"></i></a>
         </div>
 
         <div class="mobile-nav d-flex d-md-none" *ngIf="mustChangePassword()">
@@ -32,7 +34,7 @@
     </div>
   </nav>
 
-  <main class="container py-4">
+  <main [class]="isLoginRoute() ? '' : 'container py-4'">
     <router-outlet></router-outlet>
   </main>
 </div>

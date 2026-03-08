@@ -27,7 +27,7 @@ export class SuperadminPanelComponent implements OnInit {
   userSuccess = '';
 
   tenantForm = this.fb.group({
-    tenantId: ['', Validators.required],
+    tenantId: [{ value: '', disabled: true }, Validators.required],
     nome: ['', Validators.required]
   });
 
@@ -42,6 +42,12 @@ export class SuperadminPanelComponent implements OnInit {
   constructor(private fb: FormBuilder, private api: ApiService) {}
 
   ngOnInit(): void {
+    this.tenantForm.controls.nome.valueChanges.subscribe((nome) => {
+      this.tenantForm.patchValue(
+        { tenantId: this.formatTenantId(nome || '') },
+        { emitEvent: false }
+      );
+    });
     this.carregarTenants();
   }
 
@@ -74,12 +80,16 @@ export class SuperadminPanelComponent implements OnInit {
   submitTenant(): void {
     if (this.tenantForm.invalid || this.savingTenant) return;
 
+    const { tenantId, nome } = this.tenantForm.getRawValue();
+    if (!tenantId || !tenantId.trim()) {
+      this.tenantError = 'Informe um nome válido para gerar o Tenant ID.';
+      return;
+    }
     this.savingTenant = true;
     this.tenantError = '';
     this.tenantSuccess = '';
     this.createdTenantId = '';
     this.createdTenantPrintKey = '';
-    const { tenantId, nome } = this.tenantForm.getRawValue();
 
     this.api.criarTenant(tenantId!, nome!).subscribe({
       next: (createdTenant) => {
@@ -87,7 +97,7 @@ export class SuperadminPanelComponent implements OnInit {
         this.tenantSuccess = 'Tenant cadastrado com sucesso. Guarde a print key e envie ao cliente.';
         this.createdTenantId = createdTenant.tenantId;
         this.createdTenantPrintKey = createdTenant.printKey;
-        this.tenantForm.reset();
+        this.tenantForm.reset({ nome: '', tenantId: '' });
         this.carregarTenants();
       },
       error: (err) => {
@@ -161,5 +171,16 @@ export class SuperadminPanelComponent implements OnInit {
     } catch {
       return false;
     }
+  }
+
+  private formatTenantId(nome: string): string {
+    return nome
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
   }
 }

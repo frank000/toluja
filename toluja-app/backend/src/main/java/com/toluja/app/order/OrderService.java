@@ -53,9 +53,21 @@ public class OrderService {
         if (request.itens() == null || request.itens().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pedido sem itens");
         }
-        validarTenantAtivo(tenantId);
+        var tenant = tenantRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant não encontrado"));
+        if (!Boolean.TRUE.equals(tenant.getAtivo())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant não encontrado");
+        }
+        validarDadosGuest(request, Boolean.TRUE.equals(tenant.getEntregaAtiva()));
         User guestUser = obterOuCriarUsuarioGuest(tenantId);
-        return criarInterno(request, guestUser, tenantId);
+        OrderDtos.CreateOrderRequest enrichedRequest = new OrderDtos.CreateOrderRequest(
+                montarObservacaoGuest(request),
+                request.itens(),
+                request.clienteNome(),
+                request.clienteTelefone(),
+                request.tipoAtendimento()
+        );
+        return criarInterno(enrichedRequest, guestUser, tenantId);
     }
 
     public void reimprimir(Integer orderId, String username, String tenantId) {
@@ -207,5 +219,39 @@ public class OrderService {
                     user.setDeveTrocarSenha(false);
                     return userRepository.save(user);
                 });
+    }
+
+    private void validarDadosGuest(OrderDtos.CreateOrderRequest request, boolean entregaAtiva) {
+        String clienteNome = request.clienteNome() == null ? "" : request.clienteNome().trim();
+        String clienteTelefone = request.clienteTelefone() == null ? "" : request.clienteTelefone().trim();
+        String tipoAtendimento = request.tipoAtendimento() == null ? "" : request.tipoAtendimento().trim().toUpperCase();
+
+        if (clienteNome.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome do cliente é obrigatório");
+        }
+        if (clienteTelefone.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Telefone é obrigatório");
+        }
+        if (!"RETIRADA".equals(tipoAtendimento) && !"ENTREGA".equals(tipoAtendimento)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de atendimento inválido");
+        }
+        if ("ENTREGA".equals(tipoAtendimento) && !entregaAtiva) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Entrega não está habilitada para este tenant");
+        }
+    }
+
+    private String montarObservacaoGuest(OrderDtos.CreateOrderRequest request) {
+        String tipoAtendimento = request.tipoAtendimento() == null ? "" : request.tipoAtendimento().trim().toUpperCase();
+        StringBuilder observacao = new StringBuilder();
+        observacao.append("Cliente: ").append(request.clienteNome().trim())
+                .append(" | Telefone: ").append(request.clienteTelefone().trim())
+                .append(" | Tipo: ").append(tipoAtendimento);
+
+        String observacaoOriginal = request.observacao() == null ? "" : request.observacao().trim();
+        if (!observacaoOriginal.isBlank()) {
+            observacao.append(" | Obs: ").append(observacaoOriginal);
+        }
+        String texto = observacao.toString();
+        return texto.length() <= 300 ? texto : texto.substring(0, 300);
     }
 }

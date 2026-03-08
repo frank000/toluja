@@ -51,6 +51,17 @@
   line-height: 1.25;
 }
 
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal-custom {
+  z-index: 1050;
+}
+
 @media (max-width: 767.98px) {
   :host {
     padding-bottom: 122px;

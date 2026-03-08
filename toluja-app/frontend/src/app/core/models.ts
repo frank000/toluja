@@ -17,6 +17,12 @@ export interface TenantSummary {
   nome: string;
 }
 
+export interface TenantConfig {
+  entregaAtiva: boolean;
+  informacaoTelaResumo?: string | null;
+  whatsappNumero?: string | null;
+}
+
 export interface CreatedTenant {
   id: number;
   tenantId: string;
@@ -65,6 +71,14 @@ export interface PedidoItem {
   itemId: number;
   quantidade: number;
   subitemIds?: number[];
+}
+
+export interface PedidoGuestPayload {
+  itens: PedidoItem[];
+  observacao?: string;
+  clienteNome: string;
+  clienteTelefone: string;
+  tipoAtendimento: 'RETIRADA' | 'ENTREGA';
 }
 
 export interface Pedido {
