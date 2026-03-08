@@ -1,5 +1,3 @@
-$ErrorActionPreference = "Stop"
-
 param(
     [ValidateSet("service", "startup")]
     [string]$Mode = "service",
@@ -8,6 +6,9 @@ param(
     [string]$ServiceName = "TolujaPrintAgent",
     [string]$TaskName = "TolujaPrintAgent"
 )
+
+$ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $false
 
 function Test-IsAdmin {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -36,7 +37,7 @@ if (-not (Test-Path -LiteralPath $targetEnv)) {
     ) | Set-Content -Path $targetEnv -Encoding UTF8
 }
 
-$serviceExists = (sc.exe query $ServiceName) -join "`n"
+sc.exe query $ServiceName *> $null
 if ($LASTEXITCODE -eq 0) {
     sc.exe stop $ServiceName | Out-Null
     Start-Sleep -Seconds 2
@@ -44,9 +45,16 @@ if ($LASTEXITCODE -eq 0) {
     Start-Sleep -Seconds 1
 }
 
-schtasks.exe /Query /TN $TaskName *> $null
-if ($LASTEXITCODE -eq 0) {
-    schtasks.exe /Delete /TN $TaskName /F | Out-Null
+if (Get-Command Get-ScheduledTask -ErrorAction SilentlyContinue) {
+    $existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if ($null -ne $existingTask) {
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+    }
+} else {
+    cmd.exe /c "schtasks.exe /Query /TN ""$TaskName"" >nul 2>nul"
+    if ($LASTEXITCODE -eq 0) {
+        schtasks.exe /Delete /TN $TaskName /F | Out-Null
+    }
 }
 
 if ($Mode -eq "service") {

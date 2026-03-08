@@ -1,11 +1,12 @@
-$ErrorActionPreference = "Stop"
-
 param(
     [string]$InstallDir = "$env:ProgramFiles\Toluja\PrintAgent",
     [string]$ServiceName = "TolujaPrintAgent",
     [string]$TaskName = "TolujaPrintAgent",
     [switch]$RemoveFiles
 )
+
+$ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $false
 
 function Test-IsAdmin {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -25,10 +26,18 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Servico removido: $ServiceName"
 }
 
-schtasks.exe /Query /TN $TaskName *> $null
-if ($LASTEXITCODE -eq 0) {
-    schtasks.exe /Delete /TN $TaskName /F | Out-Null
-    Write-Host "Tarefa removida: $TaskName"
+if (Get-Command Get-ScheduledTask -ErrorAction SilentlyContinue) {
+    $existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if ($null -ne $existingTask) {
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+        Write-Host "Tarefa removida: $TaskName"
+    }
+} else {
+    cmd.exe /c "schtasks.exe /Query /TN ""$TaskName"" >nul 2>nul"
+    if ($LASTEXITCODE -eq 0) {
+        schtasks.exe /Delete /TN $TaskName /F | Out-Null
+        Write-Host "Tarefa removida: $TaskName"
+    }
 }
 
 if ($RemoveFiles) {

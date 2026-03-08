@@ -25,6 +25,14 @@ type config struct {
 	PollIntervalMs int
 }
 
+type fileConfig struct {
+	APIBaseURL     string `json:"apiBaseUrl"`
+	DeviceID       string `json:"deviceId"`
+	PrintKey       string `json:"printKey"`
+	PollInterval   int    `json:"pollInterval"`
+	PollIntervalMs int    `json:"pollIntervalMs"`
+}
+
 type nextJobResponse struct {
 	JobID         string        `json:"jobId"`
 	TenantID      string        `json:"tenantId"`
@@ -280,6 +288,14 @@ func sendAck(client *http.Client, cfg config, jobID string, ack ackRequest) erro
 }
 
 func loadConfig() (config, error) {
+	cfgFromFile, loadedFromFile, err := loadConfigFromJSON()
+	if err != nil {
+		return config{}, err
+	}
+	if loadedFromFile {
+		return cfgFromFile, nil
+	}
+
 	poll := 1000
 	if v := strings.TrimSpace(os.Getenv("POLL_INTERVAL_MS")); v != "" {
 		_, err := fmt.Sscanf(v, "%d", &poll)
@@ -300,35 +316,113 @@ func loadConfig() (config, error) {
 	return cfg, nil
 }
 
-func loadDotEnvIfPresent() {
-	path := ".env"
+func loadConfigFromJSON() (config, bool, error) {
+	path := strings.TrimSpace(os.Getenv("CONFIG_PATH"))
+	if path != "" {
+		cfg, ok, err := loadConfigFromJSONPath(path)
+		return cfg, ok, err
+	}
+
+	paths := []string{"config.json"}
+	if exeDir := executableDir(); exeDir != "" {
+		paths = append(paths, filepath.Join(exeDir, "config.json"))
+	}
+
+	for _, p := range paths {
+		cfg, ok, err := loadConfigFromJSONPath(p)
+		if err != nil {
+			return config{}, false, err
+		}
+		if ok {
+			return cfg, true, nil
+		}
+	}
+
+	return config{}, false, nil
+}
+
+func loadConfigFromJSONPath(path string) (config, bool, error) {
 	if _, err := os.Stat(path); err != nil {
-		return
+		if errors.Is(err, os.ErrNotExist) {
+			return config{}, false, nil
+		}
+		return config{}, false, err
 	}
 
 	content, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return
+		return config{}, false, err
 	}
 
-	lines := strings.Split(string(content), "\n")
-	for _, rawLine := range lines {
-		line := strings.TrimSpace(rawLine)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(parts[0])
-		val := strings.TrimSpace(parts[1])
-		if key == "" {
-			continue
-		}
-		if _, exists := os.LookupEnv(key); exists {
-			continue
-		}
-		_ = os.Setenv(key, val)
+	var parsed fileConfig
+	if err := json.Unmarshal(content, &parsed); err != nil {
+		return config{}, false, fmt.Errorf("invalid %s: %w", path, err)
 	}
+
+	poll := parsed.PollIntervalMs
+	if poll <= 0 {
+		poll = parsed.PollInterval
+	}
+	if poll <= 0 {
+		poll = 1000
+	}
+
+	cfg := config{
+		APIBaseURL:     strings.TrimSpace(parsed.APIBaseURL),
+		DeviceID:       strings.TrimSpace(parsed.DeviceID),
+		PrintKey:       strings.TrimSpace(parsed.PrintKey),
+		PollIntervalMs: poll,
+	}
+	if cfg.APIBaseURL == "" || cfg.DeviceID == "" || cfg.PrintKey == "" {
+		return config{}, false, fmt.Errorf("required fields in %s: apiBaseUrl, deviceId, printKey", path)
+	}
+	return cfg, true, nil
+}
+
+func loadDotEnvIfPresent() {
+	paths := []string{".env"}
+	if exeDir := executableDir(); exeDir != "" {
+		paths = append(paths, filepath.Join(exeDir, ".env"))
+	}
+
+	for _, path := range paths {
+		if _, err := os.Stat(path); err != nil {
+			continue
+		}
+
+		content, err := os.ReadFile(filepath.Clean(path))
+		if err != nil {
+			continue
+		}
+
+		lines := strings.Split(string(content), "\n")
+		for _, rawLine := range lines {
+			line := strings.TrimSpace(rawLine)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) != 2 {
+				continue
+			}
+			key := strings.TrimSpace(parts[0])
+			val := strings.TrimSpace(parts[1])
+			if key == "" {
+				continue
+			}
+			if _, exists := os.LookupEnv(key); exists {
+				continue
+			}
+			_ = os.Setenv(key, val)
+		}
+		return
+	}
+}
+
+func executableDir() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return filepath.Dir(exePath)
 }

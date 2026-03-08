@@ -17,8 +17,17 @@ GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=${V
 
 PACKAGE_DIR="dist/windows-release"
 mkdir -p "${PACKAGE_DIR}"
+ONECLICK_DIR="${PACKAGE_DIR}/oneclick-installer"
+mkdir -p "${ONECLICK_DIR}"
 cp dist/print-agent-windows-amd64.exe "${PACKAGE_DIR}/"
 cp .env.example "${PACKAGE_DIR}/"
 cp windows/install-windows.ps1 windows/uninstall-windows.ps1 "${PACKAGE_DIR}/"
+cp dist/print-agent-windows-amd64.exe "${ONECLICK_DIR}/toluja-print-agent.exe"
+cp windows-oneclick/Instalar\ Impressora\ Toluja.bat windows-oneclick/install-windows.ps1 "${ONECLICK_DIR}/"
+if [[ -f .env ]]; then
+  cp .env "${ONECLICK_DIR}/.env"
+else
+  cp .env.example "${ONECLICK_DIR}/.env"
+fi
 
 echo "Pacote Windows pronto em ${PACKAGE_DIR}"

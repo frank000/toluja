@@ -15,6 +15,7 @@ go run .
 ```
 
 O agente carrega automaticamente o arquivo `.env` da pasta atual.
+Se existir `config.json` na pasta de execucao, ele tem prioridade sobre `.env`.
 
 ## Variáveis de ambiente
 
@@ -70,6 +71,16 @@ Pacote gerado em `dist/windows-release/`:
 - `.env.example`
 - `install-windows.ps1`
 - `uninstall-windows.ps1`
+- `oneclick-installer/` (instalacao com duplo clique)
+
+Dentro de `oneclick-installer/`:
+
+- `Instalar Impressora Toluja.bat` (cliente clica neste arquivo)
+- `install-windows.ps1` (instalador robusto)
+- `toluja-print-agent.exe`
+- `.env` (configuracao pre-preenchida para a loja)
+
+No modo one-click, o instalador copia o `.env` para `C:\Program Files\Toluja\PrintAgent\.env` (sem edicao manual do cliente).
 
 ## Instalação no Windows (usuário final)
 
@@ -91,6 +102,10 @@ A instalação copia arquivos para:
 
 - `C:\Program Files\Toluja\PrintAgent\toluja-print-agent.exe`
 - `C:\Program Files\Toluja\PrintAgent\.env`
+
+No instalador one-click, a configuracao fica em:
+
+- `C:\Program Files\Toluja\PrintAgent\config.json`
 
 Depois da instalação:
 
