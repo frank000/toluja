@@ -1,0 +1,20 @@
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal-custom {
+  z-index: 1050;
+}
+
+.modal-dialog {
+  max-width: 560px;
+}
+
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 0.75rem;
+  }
+}

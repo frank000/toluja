@@ -22,6 +22,14 @@ app:
   jwt:
     secret: 01234567890123456789012345678901
     expiration-ms: 86400000
+  images:
+    base-dir: ${APP_IMAGES_BASE_DIR:${user.dir}/data/images}
+    item:
+      width: ${APP_IMAGES_ITEM_WIDTH:400}
+      height: ${APP_IMAGES_ITEM_HEIGHT:300}
+      quality: ${APP_IMAGES_ITEM_QUALITY:0.8}
+    webp:
+      cwebp-bin: ${APP_IMAGES_WEBP_CWEBP_BIN:cwebp}
 
 printers:
   mode: ${PRINTERS_MODE:agent}

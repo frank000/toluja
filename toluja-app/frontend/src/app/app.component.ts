@@ -17,6 +17,7 @@ export class AppComponent {
   loggedIn = computed(() => this.authService.isLoggedIn());
   user = computed(() => this.authService.getUser());
   mustChangePassword = computed(() => this.authService.mustChangePassword());
+  isAdmin = computed(() => this.authService.isAdmin());
 
   logout(): void {
     this.authService.logout();
@@ -25,5 +26,9 @@ export class AppComponent {
 
   isLoginRoute(): boolean {
     return this.router.url.startsWith('/login');
+  }
+
+  isGuestRoute(): boolean {
+    return this.router.url.startsWith('/guest/');
   }
 }

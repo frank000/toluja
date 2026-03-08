@@ -33,4 +33,14 @@ public class Tenant {
     @Convert(converter = BooleanToIntegerConverter.class)
     @Column(nullable = false)
     private Boolean ativo;
+
+    @Convert(converter = BooleanToIntegerConverter.class)
+    @Column(name = "entrega_ativa", nullable = false)
+    private Boolean entregaAtiva;
+
+    @Column(name = "info_tela_resumo", length = 500)
+    private String infoTelaResumo;
+
+    @Column(name = "whatsapp_numero", length = 20)
+    private String whatsappNumero;
 }

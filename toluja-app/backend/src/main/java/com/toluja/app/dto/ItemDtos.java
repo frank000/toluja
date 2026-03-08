@@ -22,6 +22,7 @@ public class ItemDtos {
             Integer id,
             String nome,
             BigDecimal preco,
+            String imagemUrl,
             Boolean ativo,
             SegmentResponse segmento,
             List<SubitemCategoryResponse> categorias

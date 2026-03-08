@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/tenants").permitAll()
+                        .requestMatchers("/api/public/tenants/**").permitAll()
+                        .requestMatchers("/api/public/item-images/**").permitAll()
                         .requestMatchers("/api/print-agent/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/change-password").authenticated()
                         .requestMatchers("/api/superadmin/**").authenticated()
@@ -54,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/segmentos").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/subitens/categorias/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/subitens/categorias/**").hasRole("ADMIN")
+                        .requestMatchers("/api/configuracao/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").hasAnyRole("ADMIN", "ATENDENTE")
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

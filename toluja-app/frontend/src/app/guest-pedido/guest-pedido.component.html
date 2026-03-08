@@ -1,0 +1,239 @@
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h5 class="mb-0">Pedido do Cliente</h5>
+  <span class="badge text-bg-light border">Tenant: {{ tenantId }}</span>
+</div>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-8">
+    <ul class="nav nav-tabs mb-3" *ngIf="segmentos.length || hasItensSemSegmento()">
+      <li class="nav-item" *ngFor="let segmento of segmentos">
+        <button
+          type="button"
+          class="nav-link"
+          [class.active]="abaSegmentoAtiva === segmento.id"
+          (click)="selecionarAbaSegmento(segmento.id)"
+        >
+          <span [style.color]="segmento.cor">
+            <i class="bi me-1" [ngClass]="segmento.icone"></i>{{ segmento.nome }}
+          </span>
+        </button>
+      </li>
+      <li class="nav-item" *ngIf="hasItensSemSegmento()">
+        <button
+          type="button"
+          class="nav-link"
+          [class.active]="abaSegmentoAtiva === 'sem-segmento'"
+          (click)="selecionarAbaSegmento('sem-segmento')"
+        >
+          <span class="text-secondary"><i class="bi bi-tag me-1"></i>Sem segmento</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+      <div class="col" *ngFor="let item of itensDaAbaAtiva">
+        <div class="card h-100 shadow-sm cursor-pointer" (click)="selecionarItem(item)">
+          <img *ngIf="item.imagemUrl" class="card-img-top item-card-image" [src]="item.imagemUrl" [alt]="item.nome" loading="lazy" />
+          <div class="card-body d-flex flex-column justify-content-between">
+            <h6 class="card-title mb-2">{{ item.nome }}</h6>
+            <p class="text-primary fw-semibold mb-2">R$ {{ item.preco | number:'1.2-2' }}</p>
+            <small class="text-muted" *ngIf="item.categorias.length">Com adicionais</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-light border mt-3 mb-0" *ngIf="itensDaAbaAtiva.length === 0">
+      Nenhum item disponível neste segmento.
+    </div>
+
+    <div class="card shadow-sm mt-4" *ngIf="itemEmConfiguracao">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Escolher subitens: {{ itemEmConfiguracao.nome }}</h5>
+        <div *ngFor="let grupo of subitensAgrupados(itemEmConfiguracao)" class="mb-3">
+          <h6 class="mb-2">{{ grupo.categoriaNome }}</h6>
+          <div class="form-check" *ngFor="let subitem of grupo.subitens">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [id]="'subitem-' + subitem.id"
+              [checked]="subitemIdsSelecionados.has(subitem.id)"
+              (change)="toggleSubitem(subitem.id, $any($event.target).checked)"
+            />
+            <label class="form-check-label" [for]="'subitem-' + subitem.id">
+              {{ subitem.nome }} (+R$ {{ subitem.preco | number:'1.2-2' }})
+            </label>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-success" (click)="confirmarConfiguracao()">Adicionar ao carrinho</button>
+          <button class="btn btn-outline-secondary" (click)="cancelarConfiguracao()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm sticky-top" style="top: 1rem;">
+      <div class="card-body">
+        <h5 class="card-title">Carrinho</h5>
+
+        <div *ngFor="let entry of carrinhoEntries" class="border rounded p-2 mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong>{{ entry.item.nome }}</strong>
+            <button class="btn btn-sm btn-outline-danger" (click)="remover(entry.key)">Remover</button>
+          </div>
+          <small class="text-muted d-block mb-1">Subitens: {{ subitensDoEntry(entry) }}</small>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" (click)="diminuir(entry.key)">-</button>
+            <span>{{ entry.quantidade }}</span>
+            <button class="btn btn-sm btn-outline-secondary" (click)="aumentar(entry.key)">+</button>
+            <span class="ms-auto">R$ {{ totalEntry(entry) | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Observação</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="observacao" (ngModelChange)="onDraftChange()"></textarea>
+        </div>
+
+        <p class="fs-5">Total: <strong>R$ {{ total | number:'1.2-2' }}</strong></p>
+        <button class="btn btn-success w-100" (click)="enviarPedido()">Enviar pedido</button>
+        <button
+          class="btn btn-outline-primary w-100 mt-2"
+          type="button"
+          *ngIf="resumoPedidoAtual"
+          (click)="abrirUltimoResumo()"
+        >
+          Ver último resumo
+        </button>
+
+        <div class="alert alert-success mt-3 mb-0" *ngIf="mensagemSucesso">{{ mensagemSucesso }}</div>
+        <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop-custom" *ngIf="modalFechamentoAberto" (click)="fecharModalFechamento()"></div>
+<div class="modal modal-custom d-block" *ngIf="modalFechamentoAberto" tabindex="-1" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Resumo do Pedido</h5>
+        <button type="button" class="btn-close" aria-label="Fechar" [disabled]="enviandoPedido" (click)="fecharModalFechamento()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-grid gap-3" *ngIf="etapaModalResumo === 'FORMULARIO'; else resumoFinalTemplate">
+          <div>
+            <label class="form-label">Nome <span class="text-danger">*</span></label>
+            <input class="form-control" type="text" [(ngModel)]="clienteNome" (ngModelChange)="onDraftChange()" [disabled]="enviandoPedido" />
+          </div>
+          <div>
+            <label class="form-label">Telefone <span class="text-danger">*</span></label>
+            <input class="form-control" type="text" [(ngModel)]="clienteTelefone" (ngModelChange)="onDraftChange()" [disabled]="enviandoPedido" />
+          </div>
+          <div>
+            <label class="form-label">Tipo de atendimento</label>
+            <div class="d-grid gap-2" *ngIf="entregaAtiva; else somenteRetiradaTemplate">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="tipoAtendimento"
+                  id="tipoAtendimentoRetirada"
+                  [checked]="!atendimentoEntrega"
+                  [disabled]="enviandoPedido"
+                  (change)="atendimentoEntrega = false; onDraftChange()"
+                />
+                <label class="form-check-label" for="tipoAtendimentoRetirada">
+                  Retirada
+                </label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="tipoAtendimento"
+                  id="tipoAtendimentoEntrega"
+                  [checked]="atendimentoEntrega"
+                  [disabled]="enviandoPedido"
+                  (change)="atendimentoEntrega = true; onDraftChange()"
+                />
+                <label class="form-check-label" for="tipoAtendimentoEntrega">
+                  Entrega
+                </label>
+              </div>
+            </div>
+            <ng-template #somenteRetiradaTemplate>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="tipoAtendimentoSomenteRetirada"
+                  [checked]="false"
+                  disabled
+                />
+                <label class="form-check-label" for="tipoAtendimentoSomenteRetirada">
+                  Retirada
+                </label>
+              </div>
+              <small class="text-muted d-block mt-1">Entrega indisponível para este tenant.</small>
+            </ng-template>
+          </div>
+          <div class="alert alert-info mb-0 py-2" *ngIf="informacaoTelaResumo">
+            {{ informacaoTelaResumo }}
+          </div>
+          <div class="alert alert-danger mb-0 py-2" *ngIf="erroModalResumo">
+            {{ erroModalResumo }}
+          </div>
+        </div>
+        <ng-template #resumoFinalTemplate>
+          <div *ngIf="resumoPedidoAtual as resumo" class="d-grid gap-2">
+            <div><strong>Código:</strong> {{ resumo.codigo }}</div>
+            <div><strong>Senha:</strong> {{ resumo.senhaChamada | number:'2.0-0' }}</div>
+            <div><strong>Data/Hora:</strong> {{ resumo.criadoEm | date:'short':'':'pt-BR' }}</div>
+            <div><strong>Cliente:</strong> {{ resumo.clienteNome }}</div>
+            <div><strong>Telefone:</strong> {{ resumo.clienteTelefone }}</div>
+            <div><strong>Atendimento:</strong> {{ resumo.tipoAtendimento }}</div>
+            <div><strong>Total:</strong> R$ {{ resumo.total | number:'1.2-2' }}</div>
+            <div *ngIf="resumo.observacao"><strong>Observação:</strong> {{ resumo.observacao }}</div>
+            <hr class="my-2" />
+            <div><strong>Itens:</strong></div>
+            <div class="small" *ngFor="let item of resumo.itens">
+              - {{ item.nome }} x{{ item.quantidade }} (R$ {{ item.subtotal | number:'1.2-2' }})
+              <div class="text-muted" *ngIf="item.subitens.length">Adicionais: {{ item.subitens.join(', ') }}</div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+      <div class="modal-footer">
+        <ng-container *ngIf="etapaModalResumo === 'FORMULARIO'; else resumoFooterTemplate">
+          <button type="button" class="btn btn-outline-secondary" [disabled]="enviandoPedido" (click)="fecharModalFechamento()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-success" [disabled]="enviandoPedido" (click)="confirmarEnvioPedido()">
+            {{ enviandoPedido ? 'Enviando...' : 'Confirmar pedido' }}
+          </button>
+        </ng-container>
+        <ng-template #resumoFooterTemplate>
+          <button type="button" class="btn btn-outline-secondary" (click)="fecharModalFechamento()">Fechar</button>
+          <button type="button" class="btn btn-success" [disabled]="!hasWhatsappEmpresa()" (click)="acompanharNoWhatsapp()">
+            Acompanhar no WhatsApp
+          </button>
+        </ng-template>
+      </div>
+      <div class="px-3 pb-3 small text-muted" *ngIf="etapaModalResumo === 'RESULTADO' && !hasWhatsappEmpresa()">
+        WhatsApp da empresa não configurado.
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="guest-ads-footer">
+  <div class="guest-ads-badge">Anúncio</div>
+  <div class="guest-ads-text">
+    <strong>Use Toluja no seu negócio.</strong>
+    Leve pedidos, atendimento e impressão com suporte de IA para ganhar velocidade e vender mais.
+  </div>
+</footer>

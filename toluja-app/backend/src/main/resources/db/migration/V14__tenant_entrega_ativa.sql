@@ -1,0 +1,2 @@
+ALTER TABLE tenants
+    ADD COLUMN entrega_ativa INTEGER NOT NULL DEFAULT 0;

@@ -1,0 +1,75 @@
+.cursor-pointer { cursor: pointer; }
+.card:hover { transform: translateY(-1px); transition: all .15s ease-in-out; }
+.item-card-image {
+  width: 100%;
+  height: 132px;
+  object-fit: cover;
+}
+
+:host {
+  display: block;
+  padding-bottom: 96px;
+}
+
+.nav-tabs .nav-link {
+  color: #495057;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #f8f9fa;
+  border-bottom-color: #f8f9fa;
+}
+
+.guest-ads-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(90deg, #0d6efd 0%, #0b5ed7 100%);
+  color: #fff;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.14);
+}
+
+.guest-ads-badge {
+  background: #fff;
+  color: #0b5ed7;
+  font-weight: 700;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.35rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.guest-ads-text {
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal-custom {
+  z-index: 1050;
+}
+
+@media (max-width: 767.98px) {
+  :host {
+    padding-bottom: 122px;
+  }
+
+  .guest-ads-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+}

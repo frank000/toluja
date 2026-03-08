@@ -3,13 +3,18 @@ package com.toluja.app.common;
 import com.toluja.app.dto.ItemDtos;
 import com.toluja.app.dto.OrderDtos;
 import com.toluja.app.item.Item;
+import com.toluja.app.item.ItemImageStorageService;
 import com.toluja.app.order.Order;
 import com.toluja.app.order.OrderItem;
 import com.toluja.app.order.OrderItemSubitem;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class EntityMapper {
+
+    private final ItemImageStorageService itemImageStorageService;
 
     public ItemDtos.ItemResponse toItemResponse(Item item) {
         var categorias = item.getCategorias().stream().map(this::toSubitemCategoryResponse).toList();
@@ -22,7 +27,15 @@ public class EntityMapper {
                     item.getSegment().getIcone()
             );
         }
-        return new ItemDtos.ItemResponse(item.getId(), item.getNome(), item.getPreco(), item.getAtivo(), segmento, categorias);
+        return new ItemDtos.ItemResponse(
+                item.getId(),
+                item.getNome(),
+                item.getPreco(),
+                itemImageStorageService.toPublicUrl(item.getImagePath()),
+                item.getAtivo(),
+                segmento,
+                categorias
+        );
     }
 
     public ItemDtos.SubitemCategoryResponse toSubitemCategoryResponse(com.toluja.app.item.SubitemCategory categoria) {

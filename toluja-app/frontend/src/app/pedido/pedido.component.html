@@ -28,6 +28,7 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
       <div class="col" *ngFor="let item of itensDaAbaAtiva">
         <div class="card h-100 shadow-sm cursor-pointer" (click)="selecionarItem(item)">
+          <img *ngIf="item.imagemUrl" class="card-img-top item-card-image" [src]="item.imagemUrl" [alt]="item.nome" loading="lazy" />
           <div class="card-body d-flex flex-column justify-content-between">
             <h6 class="card-title mb-2">{{ item.nome }}</h6>
             <p class="text-primary fw-semibold mb-2">R$ {{ item.preco | number:'1.2-2' }}</p>

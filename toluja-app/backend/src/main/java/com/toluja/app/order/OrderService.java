@@ -7,10 +7,12 @@ import com.toluja.app.item.ItemRepository;
 import com.toluja.app.item.Subitem;
 import com.toluja.app.item.SubitemRepository;
 import com.toluja.app.print.PrintService;
+import com.toluja.app.tenant.TenantRepository;
 import com.toluja.app.user.User;
 import com.toluja.app.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,17 +34,58 @@ public class OrderService {
     private final ItemRepository itemRepository;
     private final SubitemRepository subitemRepository;
     private final UserRepository userRepository;
+    private final TenantRepository tenantRepository;
+    private final PasswordEncoder passwordEncoder;
     private final EntityMapper mapper;
     private final PrintService printService;
     private final Random random = new Random();
+    private static final String GUEST_USERNAME = "__guest__";
 
     public OrderDtos.OrderResponse criar(OrderDtos.CreateOrderRequest request, String username, String tenantId) {
         if (request.itens() == null || request.itens().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pedido sem itens");
         }
+        User user = buscarUsuarioAtivo(username, tenantId);
+        return criarInterno(request, user, tenantId);
+    }
 
-        User user = userRepository.findByUsernameAndTenantIdAndAtivoTrue(username, tenantId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    public OrderDtos.OrderResponse criarGuest(OrderDtos.CreateOrderRequest request, String tenantId) {
+        if (request.itens() == null || request.itens().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pedido sem itens");
+        }
+        var tenant = tenantRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant não encontrado"));
+        if (!Boolean.TRUE.equals(tenant.getAtivo())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant não encontrado");
+        }
+        validarDadosGuest(request, Boolean.TRUE.equals(tenant.getEntregaAtiva()));
+        User guestUser = obterOuCriarUsuarioGuest(tenantId);
+        OrderDtos.CreateOrderRequest enrichedRequest = new OrderDtos.CreateOrderRequest(
+                montarObservacaoGuest(request),
+                request.itens(),
+                request.clienteNome(),
+                request.clienteTelefone(),
+                request.tipoAtendimento()
+        );
+        return criarInterno(enrichedRequest, guestUser, tenantId);
+    }
+
+    public void reimprimir(Integer orderId, String username, String tenantId) {
+        buscarUsuarioAtivo(username, tenantId);
+        Order order = orderRepository.findByIdAndTenantId(orderId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
+
+        try {
+            printService.printOrder(order);
+        } catch (Exception ex) {
+            order.setStatus("ERRO_IMPRESSAO");
+            orderRepository.save(order);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Falha ao imprimir o cupom em uma ou mais impressoras: " + ex.getMessage());
+        }
+    }
+
+    private OrderDtos.OrderResponse criarInterno(OrderDtos.CreateOrderRequest request, User user, String tenantId) {
 
         Order order = new Order();
         OffsetDateTime agora = OffsetDateTime.now();
@@ -113,8 +156,7 @@ public class OrderService {
     }
 
     public List<OrderDtos.OrderResponse> listar(String username, String tenantId) {
-        User user = userRepository.findByUsernameAndTenantIdAndAtivoTrue(username, tenantId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        User user = buscarUsuarioAtivo(username, tenantId);
 
         List<Order> orders = "ADMIN".equals(user.getRole())
                 ? orderRepository.findByTenantId(tenantId)
@@ -151,5 +193,65 @@ public class OrderService {
                 )
                 .map(order -> order.getSenhaChamada() + 1)
                 .orElse(1);
+    }
+
+    private User buscarUsuarioAtivo(String username, String tenantId) {
+        return userRepository.findByUsernameAndTenantIdAndAtivoTrue(username, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    }
+
+    private void validarTenantAtivo(String tenantId) {
+        if (!tenantRepository.existsByTenantIdAndAtivoTrue(tenantId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant não encontrado");
+        }
+    }
+
+    private User obterOuCriarUsuarioGuest(String tenantId) {
+        return userRepository.findByUsernameAndTenantIdAndAtivoTrue(GUEST_USERNAME, tenantId)
+                .orElseGet(() -> {
+                    User user = new User();
+                    user.setTenantId(tenantId);
+                    user.setUsername(GUEST_USERNAME);
+                    user.setNomeExibicao("Guest");
+                    user.setRole("ATENDENTE");
+                    user.setPasswordHash(passwordEncoder.encode("guest-" + tenantId + "-" + System.nanoTime()));
+                    user.setAtivo(true);
+                    user.setDeveTrocarSenha(false);
+                    return userRepository.save(user);
+                });
+    }
+
+    private void validarDadosGuest(OrderDtos.CreateOrderRequest request, boolean entregaAtiva) {
+        String clienteNome = request.clienteNome() == null ? "" : request.clienteNome().trim();
+        String clienteTelefone = request.clienteTelefone() == null ? "" : request.clienteTelefone().trim();
+        String tipoAtendimento = request.tipoAtendimento() == null ? "" : request.tipoAtendimento().trim().toUpperCase();
+
+        if (clienteNome.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome do cliente é obrigatório");
+        }
+        if (clienteTelefone.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Telefone é obrigatório");
+        }
+        if (!"RETIRADA".equals(tipoAtendimento) && !"ENTREGA".equals(tipoAtendimento)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de atendimento inválido");
+        }
+        if ("ENTREGA".equals(tipoAtendimento) && !entregaAtiva) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Entrega não está habilitada para este tenant");
+        }
+    }
+
+    private String montarObservacaoGuest(OrderDtos.CreateOrderRequest request) {
+        String tipoAtendimento = request.tipoAtendimento() == null ? "" : request.tipoAtendimento().trim().toUpperCase();
+        StringBuilder observacao = new StringBuilder();
+        observacao.append("Cliente: ").append(request.clienteNome().trim())
+                .append(" | Telefone: ").append(request.clienteTelefone().trim())
+                .append(" | Tipo: ").append(tipoAtendimento);
+
+        String observacaoOriginal = request.observacao() == null ? "" : request.observacao().trim();
+        if (!observacaoOriginal.isBlank()) {
+            observacao.append(" | Obs: ").append(observacaoOriginal);
+        }
+        String texto = observacao.toString();
+        return texto.length() <= 300 ? texto : texto.substring(0, 300);
     }
 }

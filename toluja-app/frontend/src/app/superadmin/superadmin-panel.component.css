@@ -2,3 +2,16 @@
   max-width: 1100px;
   margin: 0 auto;
 }
+
+.tenants-card .card-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.guest-link {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+}
