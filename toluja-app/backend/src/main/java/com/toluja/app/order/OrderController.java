@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,5 +29,10 @@ public class OrderController {
     @GetMapping
     public List<OrderDtos.OrderResponse> listar(Authentication authentication) {
         return service.listar(authentication.getName(), AuthContext.tenantId(authentication));
+    }
+
+    @PostMapping("/{orderId}/imprimir")
+    public void reimprimir(@PathVariable Integer orderId, Authentication authentication) {
+        service.reimprimir(orderId, authentication.getName(), AuthContext.tenantId(authentication));
     }
 }

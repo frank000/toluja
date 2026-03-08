@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findByCodigo(String codigo);
     Optional<Order> findByCodigoAndTenantId(String codigo, String tenantId);
+    Optional<Order> findByIdAndTenantId(Integer id, String tenantId);
     Optional<Order> findTopByTenantIdAndCriadoEmGreaterThanEqualAndCriadoEmLessThanOrderBySenhaChamadaDesc(
             String tenantId,
             OffsetDateTime inicioDia,

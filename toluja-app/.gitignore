@@ -9,3 +9,4 @@ backend/data/
 # IDE
 .vscode/
 .idea/
+docker-compose.yml

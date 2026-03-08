@@ -80,4 +80,61 @@
       </div>
     </div>
   </div>
+
+  <div class="card shadow-sm border-0 mt-4 tenants-card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+      <h5 class="card-title mb-0">Tenants Cadastrados</h5>
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="toggleTenantsCollapse()">
+        {{ tenantsCollapsed ? 'Expandir' : 'Recolher' }}
+      </button>
+    </div>
+
+    <div class="card-body" *ngIf="!tenantsCollapsed">
+      <div class="mb-3">
+        <input
+          class="form-control"
+          type="text"
+          [(ngModel)]="tenantFilter"
+          placeholder="Filtrar por tenant ID ou nome"
+          aria-label="Filtrar tenants"
+        />
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Tenant ID</th>
+              <th>Nome</th>
+              <th>Link Guest</th>
+              <th class="text-end">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tenant of filteredTenants">
+              <td><code>{{ tenant.tenantId }}</code></td>
+              <td>{{ tenant.nome }}</td>
+              <td>
+                <div class="guest-link">{{ buildGuestOrderLink(tenant.tenantId) }}</div>
+                <small class="text-success" *ngIf="copyFeedbackByTenant[tenant.tenantId] === 'Link copiado'">
+                  {{ copyFeedbackByTenant[tenant.tenantId] }}
+                </small>
+                <small class="text-danger" *ngIf="copyFeedbackByTenant[tenant.tenantId] === 'Falha ao copiar'">
+                  {{ copyFeedbackByTenant[tenant.tenantId] }}
+                </small>
+              </td>
+              <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-primary" (click)="copyGuestLink(tenant.tenantId)">
+                  Copiar link
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredTenants.length === 0">
+              <td colspan="4" class="text-center text-muted py-4">Nenhum tenant encontrado para o filtro informado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>

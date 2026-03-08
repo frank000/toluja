@@ -26,4 +26,8 @@ export class AppComponent {
   isLoginRoute(): boolean {
     return this.router.url.startsWith('/login');
   }
+
+  isGuestRoute(): boolean {
+    return this.router.url.startsWith('/guest/');
+  }
 }

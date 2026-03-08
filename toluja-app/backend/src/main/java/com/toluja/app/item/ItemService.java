@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final SubitemCategoryRepository subitemCategoryRepository;
     private final SegmentRepository segmentRepository;
+    private final ItemImageStorageService itemImageStorageService;
     private final EntityMapper mapper;
 
     public ItemDtos.ItemPageResponse listarAtivos(String tenantId, String nome, Integer page, Integer size) {
@@ -54,6 +56,10 @@ public class ItemService {
     }
 
     public ItemDtos.ItemResponse criar(ItemDtos.ItemRequest request, String tenantId) {
+        return criar(request, tenantId, null);
+    }
+
+    public ItemDtos.ItemResponse criar(ItemDtos.ItemRequest request, String tenantId, MultipartFile imagem) {
         String nome = request.nome().trim();
         if (itemRepository.existsByTenantIdAndNomeIgnoreCaseAndAtivoTrue(tenantId, nome)) {
             throw new ResponseStatusException(BAD_REQUEST, "Já existe item ativo com esse nome");
@@ -62,6 +68,7 @@ public class ItemService {
         Item item = new Item();
         item.setNome(nome);
         item.setPreco(request.preco());
+        item.setImagePath(itemImageStorageService.saveAsWebp(imagem, tenantId));
         item.setTenantId(tenantId);
         item.setAtivo(true);
         item.setSegment(buscarSegmento(request.segmentoId(), tenantId));
@@ -70,6 +77,10 @@ public class ItemService {
     }
 
     public ItemDtos.ItemResponse atualizar(Integer itemId, ItemDtos.ItemUpdateRequest request, String tenantId) {
+        return atualizar(itemId, request, tenantId, null);
+    }
+
+    public ItemDtos.ItemResponse atualizar(Integer itemId, ItemDtos.ItemUpdateRequest request, String tenantId, MultipartFile imagem) {
         Item item = itemRepository.findByIdAndAtivoTrueAndTenantId(itemId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Item não encontrado"));
 
@@ -80,6 +91,12 @@ public class ItemService {
 
         item.setNome(nome);
         item.setPreco(request.preco());
+        if (imagem != null && !imagem.isEmpty()) {
+            String imagemAnterior = item.getImagePath();
+            String novaImagem = itemImageStorageService.saveAsWebp(imagem, tenantId);
+            item.setImagePath(novaImagem);
+            itemImageStorageService.deleteIfExists(imagemAnterior);
+        }
         return mapper.toItemResponse(itemRepository.save(item));
     }
 

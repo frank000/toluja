@@ -36,6 +36,9 @@ public class Item {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal preco;
 
+    @Column(name = "image_path", length = 255)
+    private String imagePath;
+
     @Column(name = "tenant_id", nullable = false, length = 64)
     private String tenantId;
 

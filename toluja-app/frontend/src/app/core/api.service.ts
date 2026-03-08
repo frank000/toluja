@@ -22,11 +22,39 @@ export class ApiService {
   }
 
   criarItem(payload: NovoItem) {
-    return this.http.post<Item>('/api/itens', payload);
+    if (payload.imagem) {
+      const formData = new FormData();
+      const body = {
+        nome: payload.nome,
+        preco: payload.preco,
+        categoriaIds: payload.categoriaIds,
+        segmentoId: payload.segmentoId
+      };
+      formData.append('payload', new Blob([JSON.stringify(body)], { type: 'application/json' }));
+      formData.append('imagem', payload.imagem);
+      return this.http.post<Item>('/api/itens', formData);
+    }
+    const body = {
+      nome: payload.nome,
+      preco: payload.preco,
+      categoriaIds: payload.categoriaIds,
+      segmentoId: payload.segmentoId
+    };
+    return this.http.post<Item>('/api/itens', body);
   }
 
-  atualizarItem(itemId: number, payload: { nome: string; preco: number }) {
-    return this.http.put<Item>(`/api/itens/${itemId}`, payload);
+  atualizarItem(itemId: number, payload: { nome: string; preco: number; imagem?: File | null }) {
+    if (payload.imagem) {
+      const formData = new FormData();
+      const body = {
+        nome: payload.nome,
+        preco: payload.preco
+      };
+      formData.append('payload', new Blob([JSON.stringify(body)], { type: 'application/json' }));
+      formData.append('imagem', payload.imagem);
+      return this.http.put<Item>(`/api/itens/${itemId}`, formData);
+    }
+    return this.http.put<Item>(`/api/itens/${itemId}`, { nome: payload.nome, preco: payload.preco });
   }
 
   excluirItem(itemId: number) {
@@ -61,8 +89,36 @@ export class ApiService {
     return this.http.post<Pedido>('/api/pedidos', { itens, observacao });
   }
 
+  criarPedidoGuest(tenantId: string, itens: PedidoItem[], observacao?: string) {
+    return this.http.post<Pedido>(`/api/public/tenants/${encodeURIComponent(tenantId)}/pedidos`, { itens, observacao });
+  }
+
   listarPedidos() {
     return this.http.get<Pedido[]>('/api/pedidos');
+  }
+
+  reimprimirPedido(orderId: number) {
+    return this.http.post<void>(`/api/pedidos/${orderId}/imprimir`, {});
+  }
+
+  listarItensGuest(tenantId: string, params?: { nome?: string; page?: number; size?: number }) {
+    let queryParams = new HttpParams();
+    if (params?.nome && params.nome.trim()) {
+      queryParams = queryParams.set('nome', params.nome.trim());
+    }
+    if (params?.page !== undefined) {
+      queryParams = queryParams.set('page', params.page);
+    }
+    if (params?.size !== undefined) {
+      queryParams = queryParams.set('size', params.size);
+    }
+    return this.http.get<PagedResponse<Item>>(`/api/public/tenants/${encodeURIComponent(tenantId)}/itens`, {
+      params: queryParams
+    });
+  }
+
+  listarSegmentosGuest(tenantId: string) {
+    return this.http.get<Segmento[]>(`/api/public/tenants/${encodeURIComponent(tenantId)}/segmentos`);
   }
 
   listarTenantsPainel() {

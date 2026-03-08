@@ -30,6 +30,7 @@ export interface Item {
   id: number;
   nome: string;
   preco: number;
+  imagemUrl?: string | null;
   ativo?: boolean;
   segmento?: Segmento | null;
   categorias: SubitemCategoria[];
@@ -50,6 +51,7 @@ export interface NovoItem {
   preco: number;
   categoriaIds?: number[];
   segmentoId?: number | null;
+  imagem?: File | null;
 }
 
 export interface Segmento {

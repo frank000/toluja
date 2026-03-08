@@ -9,7 +9,8 @@ import { Item, Segmento, SubitemCategoria } from '../core/models';
   selector: 'app-itens',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './itens.component.html'
+  templateUrl: './itens.component.html',
+  styleUrl: './itens.component.css'
 })
 export class ItensComponent implements OnInit {
   itens: Item[] = [];
@@ -57,7 +58,11 @@ export class ItensComponent implements OnInit {
   });
 
   categoriaIdsSelecionadas = new Set<number>();
+  imagemItemSelecionada: File | null = null;
   itemEmEdicaoId: number | null = null;
+  edicaoModalAberta = false;
+  imagemEdicaoSelecionada: File | null = null;
+  salvandoEdicao = false;
   readonly iconesBasicos = [
     { value: 'bi-cup-straw', label: 'Bebidas' },
     { value: 'bi-cup-hot', label: 'Café/Chá' },
@@ -173,16 +178,24 @@ export class ItensComponent implements OnInit {
       nome: value.nome || '',
       preco: value.preco || 0,
       categoriaIds: Array.from(this.categoriaIdsSelecionadas),
-      segmentoId: value.segmentoId
+      segmentoId: value.segmentoId,
+      imagem: this.imagemItemSelecionada
     }).subscribe({
       next: () => {
         this.itemForm.reset({ nome: '', preco: 0, segmentoId: null });
         this.categoriaIdsSelecionadas.clear();
+        this.imagemItemSelecionada = null;
         this.sucesso = 'Item cadastrado com sucesso.';
         this.carregarItens();
       },
       error: () => (this.erro = 'Não foi possível cadastrar item.')
     });
+  }
+
+  selecionarImagemItem(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.imagemItemSelecionada = file;
   }
 
   iniciarEdicao(item: Item): void {
@@ -191,27 +204,48 @@ export class ItensComponent implements OnInit {
     this.sucesso = '';
     this.itemEmEdicaoId = item.id;
     this.edicaoForm.reset({ nome: item.nome, preco: item.preco });
+    this.imagemEdicaoSelecionada = null;
+    this.edicaoModalAberta = true;
   }
 
   cancelarEdicao(): void {
+    this.edicaoModalAberta = false;
     this.itemEmEdicaoId = null;
+    this.imagemEdicaoSelecionada = null;
     this.edicaoForm.reset({ nome: '', preco: 0 });
   }
 
-  salvarEdicao(itemId: number): void {
+  salvarEdicao(): void {
+    if (this.itemEmEdicaoId == null) return;
     if (!this.auth.isAdmin() || this.edicaoForm.invalid) return;
+    if (this.salvandoEdicao) return;
     this.erro = '';
     this.sucesso = '';
+    this.salvandoEdicao = true;
     const value = this.edicaoForm.getRawValue();
 
-    this.api.atualizarItem(itemId, { nome: value.nome || '', preco: value.preco || 0 }).subscribe({
+    this.api.atualizarItem(this.itemEmEdicaoId, {
+      nome: value.nome || '',
+      preco: value.preco || 0,
+      imagem: this.imagemEdicaoSelecionada
+    }).subscribe({
       next: () => {
+        this.salvandoEdicao = false;
         this.sucesso = 'Item atualizado com sucesso.';
         this.cancelarEdicao();
         this.carregarItens();
       },
-      error: () => (this.erro = 'Não foi possível atualizar item.')
+      error: () => {
+        this.salvandoEdicao = false;
+        this.erro = 'Não foi possível atualizar item.';
+      }
     });
+  }
+
+  selecionarImagemEdicao(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.imagemEdicaoSelecionada = file;
   }
 
   excluirItem(itemId: number): void {

@@ -19,7 +19,7 @@ services:
 
   backend:
     build:
-      context: ./toluja-app/backend
+      context: ./backend
     container_name: toluja-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/toluja
@@ -39,7 +39,7 @@ services:
 
   frontend:
     build:
-      context: ./toluja-app/frontend
+      context: ./frontend
     container_name: toluja-frontend
     depends_on:
       - backend

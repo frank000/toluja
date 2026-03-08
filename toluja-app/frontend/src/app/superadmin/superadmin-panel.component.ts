@@ -1,18 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { TenantSummary } from '../core/models';
 
 @Component({
   selector: 'app-superadmin-panel',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './superadmin-panel.component.html',
   styleUrl: './superadmin-panel.component.css'
 })
 export class SuperadminPanelComponent implements OnInit {
   tenants: TenantSummary[] = [];
+  tenantsCollapsed = false;
+  tenantFilter = '';
+  copyFeedbackByTenant: Record<string, string> = {};
   loadingTenants = false;
   savingTenant = false;
   savingUser = false;
@@ -40,6 +43,16 @@ export class SuperadminPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarTenants();
+  }
+
+  get filteredTenants(): TenantSummary[] {
+    const filtro = this.tenantFilter.trim().toLowerCase();
+    if (!filtro) {
+      return this.tenants;
+    }
+    return this.tenants.filter((tenant) => {
+      return tenant.tenantId.toLowerCase().includes(filtro) || tenant.nome.toLowerCase().includes(filtro);
+    });
   }
 
   carregarTenants(): void {
@@ -110,5 +123,43 @@ export class SuperadminPanelComponent implements OnInit {
         this.userError = err?.error?.message || 'Falha ao cadastrar usuário.';
       }
     });
+  }
+
+  toggleTenantsCollapse(): void {
+    this.tenantsCollapsed = !this.tenantsCollapsed;
+  }
+
+  buildGuestOrderLink(tenantId: string): string {
+    return `${window.location.origin}/guest/${encodeURIComponent(tenantId)}`;
+  }
+
+  async copyGuestLink(tenantId: string): Promise<void> {
+    const link = this.buildGuestOrderLink(tenantId);
+    const copiado = await this.writeClipboard(link);
+    this.copyFeedbackByTenant[tenantId] = copiado ? 'Link copiado' : 'Falha ao copiar';
+    setTimeout(() => {
+      delete this.copyFeedbackByTenant[tenantId];
+    }, 2500);
+  }
+
+  private async writeClipboard(value: string): Promise<boolean> {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+        return true;
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return success;
+    } catch {
+      return false;
+    }
   }
 }

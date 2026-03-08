@@ -1,12 +1,12 @@
-<div class="app-shell" [class.app-shell--watermark]="loggedIn() && !isLoginRoute()">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" *ngIf="!isLoginRoute()">
+<div class="app-shell" [class.app-shell--watermark]="(loggedIn() && !isLoginRoute()) || isGuestRoute()">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" *ngIf="loggedIn() && !isLoginRoute()">
     <div class="container">
       <a class="navbar-brand d-inline-flex align-items-center gap-2" routerLink="/pedido">
         <img src="assets/logo transparente.png" alt="Toluja Go" class="brand-logo" />
         <span>Toluja GO</span>
       </a>
 
-      <div class="navbar-main w-100" *ngIf="loggedIn()">
+      <div class="navbar-main w-100">
         <ul class="navbar-nav me-auto mb-0 d-none d-md-flex flex-row gap-2">
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/itens">Itens</a></li>
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/pedido">Novo Pedido</a></li>
