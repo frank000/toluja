@@ -45,6 +45,57 @@ services:
       - backend
     ports:
       - "4200:80"
+    networks:
+      - default
+      - proxy
+
+  db-wp:
+    image: mariadb:11.4
+    container_name: toluja-db-wp
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: 4102
+      MYSQL_ROOT_PASSWORD: 4102
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -p4102 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - wp_db_data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - default
+
+  wordpress:
+    image: wordpress:latest
+    container_name: toluja-wordpress
+    depends_on:
+      db-wp:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db-wp:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: 4102
+      WORDPRESS_TABLE_PREFIX: wp_
+    volumes:
+      - ./wordpress/wp-content:/var/www/html/wp-content
+      - ./wordpress/toluja-go-landing:/var/www/html/wp-content/themes/toluja-go-landing
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    networks:
+      - default
+      - proxy
+  #     - default
+  #     - proxy
 
 volumes:
   db_data:
+  wp_db_data:
+
+networks:
+  proxy:
+    external: true

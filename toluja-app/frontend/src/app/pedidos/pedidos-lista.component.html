@@ -1,4 +1,4 @@
-<div class="card shadow-sm">
+<!-- <div class="card shadow-sm"> -->
   <div class="card-body">
     <h5 class="card-title mb-3">Lista de Pedidos</h5>
     <form class="row g-2 mb-3" (ngSubmit)="aplicarFiltros()">
@@ -124,7 +124,6 @@
     <div class="alert alert-success mt-3 mb-0" *ngIf="sucesso">{{ sucesso }}</div>
     <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
   </div>
-</div>
 
 <div class="modal-backdrop-custom" *ngIf="modalVisualizacaoAberta" (click)="fecharVisualizacao()"></div>
 <div class="modal modal-custom d-block" *ngIf="modalVisualizacaoAberta" tabindex="-1" role="dialog" aria-modal="true">
