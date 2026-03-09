@@ -40,13 +40,16 @@ public class OrderService {
     private final PrintService printService;
     private final Random random = new Random();
     private static final String GUEST_USERNAME = "__guest__";
+    private static final String STATUS_ABERTO = "ABERTO";
+    private static final String STATUS_WHATSAPP = "WHATSAPP";
+    private static final String STATUS_ERRO_IMPRESSAO = "ERRO_IMPRESSAO";
 
     public OrderDtos.OrderResponse criar(OrderDtos.CreateOrderRequest request, String username, String tenantId) {
         if (request.itens() == null || request.itens().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pedido sem itens");
         }
         User user = buscarUsuarioAtivo(username, tenantId);
-        return criarInterno(request, user, tenantId);
+        return criarInterno(request, user, tenantId, STATUS_ABERTO);
     }
 
     public OrderDtos.OrderResponse criarGuest(OrderDtos.CreateOrderRequest request, String tenantId) {
@@ -67,7 +70,7 @@ public class OrderService {
                 request.clienteTelefone(),
                 request.tipoAtendimento()
         );
-        return criarInterno(enrichedRequest, guestUser, tenantId);
+        return criarInterno(enrichedRequest, guestUser, tenantId, STATUS_WHATSAPP);
     }
 
     public void reimprimir(Integer orderId, String username, String tenantId) {
@@ -78,21 +81,21 @@ public class OrderService {
         try {
             printService.printOrder(order);
         } catch (Exception ex) {
-            order.setStatus("ERRO_IMPRESSAO");
+            order.setStatus(STATUS_ERRO_IMPRESSAO);
             orderRepository.save(order);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Falha ao imprimir o cupom em uma ou mais impressoras: " + ex.getMessage());
         }
     }
 
-    private OrderDtos.OrderResponse criarInterno(OrderDtos.CreateOrderRequest request, User user, String tenantId) {
+    private OrderDtos.OrderResponse criarInterno(OrderDtos.CreateOrderRequest request, User user, String tenantId, String statusInicial) {
 
         Order order = new Order();
         OffsetDateTime agora = OffsetDateTime.now();
         order.setCodigo(gerarCodigo(tenantId));
         order.setSenhaChamada(gerarProximaSenhaChamada(agora, tenantId));
         order.setCriadoEm(agora);
-        order.setStatus("ABERTO");
+        order.setStatus(statusInicial);
         order.setTenantId(tenantId);
         order.setObservacao(request.observacao());
         order.setTotal(BigDecimal.ZERO);
@@ -146,7 +149,7 @@ public class OrderService {
         try {
             printService.printOrder(saved);
         } catch (Exception ex) {
-            saved.setStatus("ERRO_IMPRESSAO");
+            saved.setStatus(STATUS_ERRO_IMPRESSAO);
             orderRepository.save(saved);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Falha ao imprimir o cupom em uma ou mais impressoras: " + ex.getMessage());

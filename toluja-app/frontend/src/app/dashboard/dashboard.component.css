@@ -1,0 +1,54 @@
+.dashboard-card {
+  border-color: #e9ecef;
+}
+
+.dashboard-card--vendas {
+  border-left: 4px solid #0d6efd;
+}
+
+.dashboard-card--pedidos {
+  border-left: 4px solid #6f42c1;
+}
+
+.dashboard-card--whatsapp {
+  border-left: 4px solid #198754;
+}
+
+.chart-area {
+  height: 220px;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.chart-bar {
+  min-width: 34px;
+  flex: 1 0 34px;
+  max-width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.chart-bar__fill {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 6px 6px 0 0;
+  background: #adb5bd;
+}
+
+.chart-bar__fill--vendas {
+  background: linear-gradient(180deg, #5fa8ff 0%, #0d6efd 100%);
+}
+
+.chart-bar__fill--pedidos {
+  background: linear-gradient(180deg, #a98adf 0%, #6f42c1 100%);
+}
+
+.chart-bar__label {
+  font-size: 0.68rem;
+  color: #6c757d;
+}

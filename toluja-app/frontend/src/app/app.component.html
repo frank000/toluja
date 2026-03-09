@@ -8,6 +8,7 @@
 
       <div class="navbar-main w-100">
         <ul class="navbar-nav me-auto mb-0 d-none d-md-flex flex-row gap-2">
+          <li class="nav-item" *ngIf="!mustChangePassword() && isAdmin()"><a class="nav-link" routerLink="/dashboard">Dashboard</a></li>
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/itens">Itens</a></li>
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/pedido">Novo Pedido</a></li>
           <li class="nav-item" *ngIf="!mustChangePassword()"><a class="nav-link" routerLink="/pedidos">Pedidos</a></li>
@@ -16,6 +17,7 @@
         </ul>
 
         <div class="mobile-nav d-flex d-md-none" *ngIf="!mustChangePassword()">
+          <a class="btn btn-outline-light btn-sm" *ngIf="isAdmin()" routerLink="/dashboard" title="Dashboard" aria-label="Dashboard"><i class="bi bi-bar-chart"></i></a>
           <a class="btn btn-outline-light btn-sm" routerLink="/itens" title="Itens" aria-label="Itens"><i class="bi bi-grid"></i></a>
           <a class="btn btn-outline-light btn-sm" routerLink="/pedido" title="Novo Pedido" aria-label="Novo Pedido"><i class="bi bi-plus-square"></i></a>
           <a class="btn btn-outline-light btn-sm" routerLink="/pedidos" title="Pedidos" aria-label="Pedidos"><i class="bi bi-card-list"></i></a>

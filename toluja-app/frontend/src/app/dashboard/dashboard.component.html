@@ -1,0 +1,84 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h5 class="mb-0">Dashboard</h5>
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted" for="periodo-dashboard">Período</label>
+        <select
+          id="periodo-dashboard"
+          class="form-select form-select-sm"
+          style="width: auto;"
+          [(ngModel)]="periodoSelecionado"
+          (change)="onPeriodoChange()"
+        >
+          <option *ngFor="let opcao of opcoesPeriodo" [ngValue]="opcao.value">{{ opcao.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-4">
+        <div class="card h-100 border dashboard-card dashboard-card--vendas">
+          <div class="card-body">
+            <p class="text-muted small mb-1">Vendas no período</p>
+            <h4 class="mb-0">R$ {{ totalVendas | number:'1.2-2' }}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card h-100 border dashboard-card dashboard-card--pedidos">
+          <div class="card-body">
+            <p class="text-muted small mb-1">Pedidos no período</p>
+            <h4 class="mb-0">{{ totalPedidos }}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card h-100 border dashboard-card dashboard-card--whatsapp">
+          <div class="card-body">
+            <p class="text-muted small mb-1">Pedidos vindos do WhatsApp</p>
+            <h4 class="mb-0">{{ totalPedidosWhatsapp }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="card border">
+          <div class="card-body">
+            <h6 class="mb-3">Gráfico de vendas por dia</h6>
+            <div class="chart-area" *ngIf="serieVendasDia.length > 0; else semDadosVendas">
+              <div class="chart-bar" *ngFor="let ponto of serieVendasDia" [title]="ponto.label + ': R$ ' + (ponto.valor | number:'1.2-2')">
+                <div class="chart-bar__fill chart-bar__fill--vendas" [style.height.%]="alturaBarra(serieVendasDia, ponto.valor)"></div>
+                <small class="chart-bar__label">{{ ponto.label }}</small>
+              </div>
+            </div>
+            <ng-template #semDadosVendas>
+              <p class="text-muted mb-0">Sem vendas no período selecionado.</p>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card border">
+          <div class="card-body">
+            <h6 class="mb-3">Gráfico de quantidade de pedidos por dia</h6>
+            <div class="chart-area" *ngIf="seriePedidosDia.length > 0; else semDadosPedidos">
+              <div class="chart-bar" *ngFor="let ponto of seriePedidosDia" [title]="ponto.label + ': ' + ponto.valor + ' pedido(s)'">
+                <div class="chart-bar__fill chart-bar__fill--pedidos" [style.height.%]="alturaBarra(seriePedidosDia, ponto.valor)"></div>
+                <small class="chart-bar__label">{{ ponto.label }}</small>
+              </div>
+            </div>
+            <ng-template #semDadosPedidos>
+              <p class="text-muted mb-0">Sem pedidos no período selecionado.</p>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+  </div>
+</div>

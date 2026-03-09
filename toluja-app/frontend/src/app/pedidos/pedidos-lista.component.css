@@ -13,6 +13,11 @@
   color: #856404;
 }
 
+.status-badge--whatsapp {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
 .status-badge--erro-impressao {
   background-color: #ffe5d0;
   color: #a04a00;

@@ -135,6 +135,7 @@ export class PedidosListaComponent implements OnInit {
   statusClass(status: string): string {
     const normalized = (status || '').toUpperCase();
     if (normalized === 'ABERTO') return 'status-badge status-badge--aberto';
+    if (normalized === 'WHATSAPP') return 'status-badge status-badge--whatsapp';
     if (normalized === 'ERRO_IMPRESSAO') return 'status-badge status-badge--erro-impressao';
     if (normalized === 'IMPRESSO') return 'status-badge status-badge--impresso';
     if (normalized === 'CANCELADO') return 'status-badge status-badge--cancelado';
