@@ -91,6 +91,9 @@ public class ItemService {
 
         item.setNome(nome);
         item.setPreco(request.preco());
+        if (request.categoriaIds() != null) {
+            item.setCategorias(buscarCategorias(request.categoriaIds(), tenantId));
+        }
         if (imagem != null && !imagem.isEmpty()) {
             String imagemAnterior = item.getImagePath();
             String novaImagem = itemImageStorageService.saveAsWebp(imagem, tenantId);

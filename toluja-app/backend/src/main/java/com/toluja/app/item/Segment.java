@@ -30,4 +30,7 @@ public class Segment {
 
     @Column(name = "tenant_id", nullable = false, length = 64)
     private String tenantId;
+
+    @Column(name = "ordem", nullable = false)
+    private Integer ordem;
 }

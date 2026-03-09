@@ -16,7 +16,8 @@ public class ItemDtos {
     ) {}
     public record ItemUpdateRequest(
             @NotBlank String nome,
-            @NotNull @DecimalMin("0.01") BigDecimal preco
+            @NotNull @DecimalMin("0.01") BigDecimal preco,
+            List<Integer> categoriaIds
     ) {}
     public record ItemResponse(
             Integer id,
@@ -37,6 +38,7 @@ public class ItemDtos {
             boolean last
     ) {}
     public record SegmentRequest(@NotBlank String nome, @NotBlank String cor, @NotBlank String icone) {}
+    public record SegmentOrderRequest(@NotNull List<Integer> segmentoIds) {}
     public record SegmentResponse(Integer id, String nome, String cor, String icone) {}
 
     public record SubitemCategoryRequest(@NotBlank String nome) {}

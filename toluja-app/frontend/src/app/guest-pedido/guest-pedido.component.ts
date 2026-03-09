@@ -55,6 +55,7 @@ export class GuestPedidoComponent implements OnInit {
   clienteTelefone = '';
   atendimentoEntrega = false;
   resumoPedidoAtual: PedidoResumo | null = null;
+  resumosPedidos: PedidoResumo[] = [];
   abaSegmentoAtiva: number | 'sem-segmento' | null = null;
 
   itemEmConfiguracao: Item | null = null;
@@ -71,6 +72,7 @@ export class GuestPedidoComponent implements OnInit {
     this.carregarSegmentos();
     this.carregarTodosItens(0, []);
     this.carregarConfiguracaoTenant();
+    this.carregarPerfilClienteLocal();
     this.carregarRascunhoLocal();
     this.carregarResumoLocal();
   }
@@ -181,6 +183,10 @@ export class GuestPedidoComponent implements OnInit {
       subtotal: this.totalEntry(entry)
     }));
 
+    this.clienteNome = nome;
+    this.clienteTelefone = telefone;
+    this.salvarPerfilClienteLocal();
+
     this.enviandoPedido = true;
     this.api.criarPedidoGuest(this.tenantId, {
       itens,
@@ -204,11 +210,10 @@ export class GuestPedidoComponent implements OnInit {
           observacao: this.observacao || undefined,
           itens: itensResumo
         };
+        this.resumosPedidos = [this.resumoPedidoAtual, ...this.resumosPedidos].slice(0, 20);
         this.salvarResumoLocal();
         this.limparRascunhoLocal();
         this.observacao = '';
-        this.clienteNome = '';
-        this.clienteTelefone = '';
         this.atendimentoEntrega = false;
         this.mensagemSucesso = `Pedido enviado com sucesso. Senha: ${this.formatarSenha(pedido.senhaChamada)} | Código: ${pedido.codigo}`;
       },
@@ -240,11 +245,15 @@ export class GuestPedidoComponent implements OnInit {
   }
 
   onDraftChange(): void {
+    this.salvarPerfilClienteLocal();
     this.salvarRascunhoLocal();
   }
 
-  abrirUltimoResumo(): void {
-    if (!this.resumoPedidoAtual) return;
+  abrirUltimosResumos(): void {
+    if (!this.resumosPedidos.length && !this.resumoPedidoAtual) return;
+    if (!this.resumoPedidoAtual && this.resumosPedidos.length) {
+      this.resumoPedidoAtual = this.resumosPedidos[0];
+    }
     this.modalFechamentoAberto = true;
     this.etapaModalResumo = 'RESULTADO';
     this.erroModalResumo = '';
@@ -387,21 +396,33 @@ export class GuestPedidoComponent implements OnInit {
     return `guest_order_summary_${this.tenantId}`;
   }
 
+  private clienteStorageKey(): string {
+    return `guest_order_customer_${this.tenantId}`;
+  }
+
   private draftStorageKey(): string {
     return `guest_order_draft_${this.tenantId}`;
   }
 
   private salvarResumoLocal(): void {
-    if (!this.resumoPedidoAtual) return;
-    localStorage.setItem(this.resumoStorageKey(), JSON.stringify(this.resumoPedidoAtual));
+    localStorage.setItem(this.resumoStorageKey(), JSON.stringify(this.resumosPedidos));
   }
 
   private carregarResumoLocal(): void {
     const raw = localStorage.getItem(this.resumoStorageKey());
     if (!raw) return;
     try {
-      this.resumoPedidoAtual = JSON.parse(raw) as PedidoResumo;
+      const parsed = JSON.parse(raw) as PedidoResumo[] | PedidoResumo;
+      if (Array.isArray(parsed)) {
+        this.resumosPedidos = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        this.resumosPedidos = [parsed];
+      } else {
+        this.resumosPedidos = [];
+      }
+      this.resumoPedidoAtual = this.resumosPedidos.length ? this.resumosPedidos[0] : null;
     } catch {
+      this.resumosPedidos = [];
       this.resumoPedidoAtual = null;
     }
   }
@@ -430,8 +451,8 @@ export class GuestPedidoComponent implements OnInit {
       };
       this.carrinho = parsed.carrinho || {};
       this.observacao = parsed.observacao || '';
-      this.clienteNome = parsed.clienteNome || '';
-      this.clienteTelefone = parsed.clienteTelefone || '';
+      this.clienteNome = (parsed.clienteNome || this.clienteNome || '').trim();
+      this.clienteTelefone = (parsed.clienteTelefone || this.clienteTelefone || '').trim();
       this.atendimentoEntrega = !!parsed.atendimentoEntrega;
     } catch {
       this.carrinho = {};
@@ -440,6 +461,27 @@ export class GuestPedidoComponent implements OnInit {
 
   private limparRascunhoLocal(): void {
     localStorage.removeItem(this.draftStorageKey());
+  }
+
+  private salvarPerfilClienteLocal(): void {
+    const perfil = {
+      clienteNome: this.clienteNome.trim(),
+      clienteTelefone: this.clienteTelefone.trim()
+    };
+    localStorage.setItem(this.clienteStorageKey(), JSON.stringify(perfil));
+  }
+
+  private carregarPerfilClienteLocal(): void {
+    const raw = localStorage.getItem(this.clienteStorageKey());
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as { clienteNome?: string; clienteTelefone?: string };
+      this.clienteNome = (parsed.clienteNome || '').trim();
+      this.clienteTelefone = (parsed.clienteTelefone || '').trim();
+    } catch {
+      this.clienteNome = '';
+      this.clienteTelefone = '';
+    }
   }
 
   private mensagemWhatsapp(resumo: PedidoResumo): string {

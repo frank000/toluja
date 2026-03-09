@@ -43,18 +43,23 @@ export class ApiService {
     return this.http.post<Item>('/api/itens', body);
   }
 
-  atualizarItem(itemId: number, payload: { nome: string; preco: number; imagem?: File | null }) {
+  atualizarItem(itemId: number, payload: { nome: string; preco: number; categoriaIds?: number[]; imagem?: File | null }) {
     if (payload.imagem) {
       const formData = new FormData();
       const body = {
         nome: payload.nome,
-        preco: payload.preco
+        preco: payload.preco,
+        categoriaIds: payload.categoriaIds
       };
       formData.append('payload', new Blob([JSON.stringify(body)], { type: 'application/json' }));
       formData.append('imagem', payload.imagem);
       return this.http.put<Item>(`/api/itens/${itemId}`, formData);
     }
-    return this.http.put<Item>(`/api/itens/${itemId}`, { nome: payload.nome, preco: payload.preco });
+    return this.http.put<Item>(`/api/itens/${itemId}`, {
+      nome: payload.nome,
+      preco: payload.preco,
+      categoriaIds: payload.categoriaIds
+    });
   }
 
   excluirItem(itemId: number) {
@@ -67,6 +72,14 @@ export class ApiService {
 
   criarSegmento(payload: { nome: string; cor: string; icone: string }) {
     return this.http.post<Segmento>('/api/segmentos', payload);
+  }
+
+  excluirSegmento(segmentoId: number) {
+    return this.http.delete<void>(`/api/segmentos/${segmentoId}`);
+  }
+
+  atualizarOrdemSegmentos(segmentoIds: number[]) {
+    return this.http.put<void>('/api/segmentos/ordem', { segmentoIds });
   }
 
   listarCategoriasSubitens() {

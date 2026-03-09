@@ -102,10 +102,10 @@
         <button
           class="btn btn-outline-primary w-100 mt-2"
           type="button"
-          *ngIf="resumoPedidoAtual"
-          (click)="abrirUltimoResumo()"
+          *ngIf="resumosPedidos.length > 0"
+          (click)="abrirUltimosResumos()"
         >
-          Ver último resumo
+          Ver últimos resumos ({{ resumosPedidos.length }})
         </button>
 
         <div class="alert alert-success mt-3 mb-0" *ngIf="mensagemSucesso">{{ mensagemSucesso }}</div>
@@ -189,20 +189,25 @@
           </div>
         </div>
         <ng-template #resumoFinalTemplate>
-          <div *ngIf="resumoPedidoAtual as resumo" class="d-grid gap-2">
-            <div><strong>Código:</strong> {{ resumo.codigo }}</div>
-            <div><strong>Senha:</strong> {{ resumo.senhaChamada | number:'2.0-0' }}</div>
-            <div><strong>Data/Hora:</strong> {{ resumo.criadoEm | date:'short':'':'pt-BR' }}</div>
-            <div><strong>Cliente:</strong> {{ resumo.clienteNome }}</div>
-            <div><strong>Telefone:</strong> {{ resumo.clienteTelefone }}</div>
-            <div><strong>Atendimento:</strong> {{ resumo.tipoAtendimento }}</div>
-            <div><strong>Total:</strong> R$ {{ resumo.total | number:'1.2-2' }}</div>
-            <div *ngIf="resumo.observacao"><strong>Observação:</strong> {{ resumo.observacao }}</div>
-            <hr class="my-2" />
-            <div><strong>Itens:</strong></div>
-            <div class="small" *ngFor="let item of resumo.itens">
-              - {{ item.nome }} x{{ item.quantidade }} (R$ {{ item.subtotal | number:'1.2-2' }})
-              <div class="text-muted" *ngIf="item.subitens.length">Adicionais: {{ item.subitens.join(', ') }}</div>
+          <div class="d-grid gap-3">
+            <div *ngFor="let resumo of resumosPedidos; let i = index" class="border rounded p-3">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <div><strong>{{ i === 0 ? 'Resumo mais recente' : 'Resumo anterior' }}</strong></div>
+                <small class="text-muted">{{ resumo.criadoEm | date:'short':'':'pt-BR' }}</small>
+              </div>
+              <div><strong>Código:</strong> {{ resumo.codigo }}</div>
+              <div><strong>Senha:</strong> {{ resumo.senhaChamada | number:'2.0-0' }}</div>
+              <div><strong>Cliente:</strong> {{ resumo.clienteNome }}</div>
+              <div><strong>Telefone:</strong> {{ resumo.clienteTelefone }}</div>
+              <div><strong>Atendimento:</strong> {{ resumo.tipoAtendimento }}</div>
+              <div><strong>Total:</strong> R$ {{ resumo.total | number:'1.2-2' }}</div>
+              <div *ngIf="resumo.observacao"><strong>Observação:</strong> {{ resumo.observacao }}</div>
+              <hr class="my-2" />
+              <div><strong>Itens:</strong></div>
+              <div class="small" *ngFor="let item of resumo.itens">
+                - {{ item.nome }} x{{ item.quantidade }} (R$ {{ item.subtotal | number:'1.2-2' }})
+                <div class="text-muted" *ngIf="item.subitens.length">Adicionais: {{ item.subitens.join(', ') }}</div>
+              </div>
             </div>
           </div>
         </ng-template>

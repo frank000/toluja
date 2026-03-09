@@ -5,6 +5,8 @@ import { ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { Item, Segmento, SubitemCategoria } from '../core/models';
 
+type ModalCadastro = 'itens' | 'subitens' | 'segmentos' | null;
+
 @Component({
   selector: 'app-itens',
   standalone: true,
@@ -20,7 +22,6 @@ export class ItensComponent implements OnInit {
   sucesso = '';
   filtroNome = '';
   categoriasExpandidas = new Set<number>();
-  secaoCadastrosExpandida = true;
   secaoItensExpandida = true;
 
   paginaAtual = 0;
@@ -29,6 +30,8 @@ export class ItensComponent implements OnInit {
   totalItens = 0;
   primeiraPagina = true;
   ultimaPagina = true;
+
+  modalCadastroAberta: ModalCadastro = null;
 
   categoriaForm = this.fb.group({
     nome: ['', Validators.required]
@@ -59,10 +62,16 @@ export class ItensComponent implements OnInit {
 
   categoriaIdsSelecionadas = new Set<number>();
   imagemItemSelecionada: File | null = null;
+  salvandoItem = false;
+
   itemEmEdicaoId: number | null = null;
   edicaoModalAberta = false;
   imagemEdicaoSelecionada: File | null = null;
+  categoriaIdsEdicaoSelecionadas = new Set<number>();
   salvandoEdicao = false;
+  excluindoSegmentoId: number | null = null;
+  salvandoOrdemSegmentos = false;
+
   readonly iconesBasicos = [
     { value: 'bi-cup-straw', label: 'Bebidas' },
     { value: 'bi-cup-hot', label: 'Café/Chá' },
@@ -79,8 +88,19 @@ export class ItensComponent implements OnInit {
     this.recarregarTela();
   }
 
-  toggleSecaoCadastros(): void {
-    this.secaoCadastrosExpandida = !this.secaoCadastrosExpandida;
+  abrirModalCadastro(tipo: Exclude<ModalCadastro, null>): void {
+    if (!this.auth.isAdmin()) return;
+    this.erro = '';
+    this.sucesso = '';
+    this.modalCadastroAberta = tipo;
+  }
+
+  fecharModalCadastro(): void {
+    this.modalCadastroAberta = null;
+  }
+
+  modalAberta(tipo: Exclude<ModalCadastro, null>): boolean {
+    return this.modalCadastroAberta === tipo;
   }
 
   toggleSecaoItens(): void {
@@ -120,6 +140,7 @@ export class ItensComponent implements OnInit {
   cadastrarCategoria(): void {
     if (this.categoriaForm.invalid || !this.auth.isAdmin()) return;
     this.sucesso = '';
+    this.erro = '';
     const nome = this.categoriaForm.getRawValue().nome?.trim();
     if (!nome) return;
 
@@ -136,6 +157,7 @@ export class ItensComponent implements OnInit {
   cadastrarSubitem(): void {
     if (this.subitemForm.invalid || !this.auth.isAdmin()) return;
     this.sucesso = '';
+    this.erro = '';
     const value = this.subitemForm.getRawValue();
     if (!value.categoriaId) return;
 
@@ -152,6 +174,7 @@ export class ItensComponent implements OnInit {
   cadastrarSegmento(): void {
     if (this.segmentoForm.invalid || !this.auth.isAdmin()) return;
     this.sucesso = '';
+    this.erro = '';
     const value = this.segmentoForm.getRawValue();
     const nome = value.nome?.trim();
     const cor = value.cor?.trim();
@@ -169,27 +192,74 @@ export class ItensComponent implements OnInit {
     });
   }
 
-  cadastrarItem(): void {
-    if (this.itemForm.invalid || !this.auth.isAdmin()) return;
-    this.sucesso = '';
+  excluirSegmento(segmentoId: number): void {
+    if (!this.auth.isAdmin()) return;
+    if (!confirm('Deseja realmente excluir este segmento?')) return;
+    if (this.excluindoSegmentoId !== null || this.salvandoOrdemSegmentos) return;
 
-    const value = this.itemForm.getRawValue();
-    this.api.criarItem({
-      nome: value.nome || '',
-      preco: value.preco || 0,
-      categoriaIds: Array.from(this.categoriaIdsSelecionadas),
-      segmentoId: value.segmentoId,
-      imagem: this.imagemItemSelecionada
-    }).subscribe({
+    this.sucesso = '';
+    this.erro = '';
+    this.excluindoSegmentoId = segmentoId;
+
+    this.api.excluirSegmento(segmentoId).subscribe({
       next: () => {
-        this.itemForm.reset({ nome: '', preco: 0, segmentoId: null });
-        this.categoriaIdsSelecionadas.clear();
-        this.imagemItemSelecionada = null;
-        this.sucesso = 'Item cadastrado com sucesso.';
+        this.excluindoSegmentoId = null;
+        this.sucesso = 'Segmento excluído com sucesso.';
+        this.carregarSegmentos();
         this.carregarItens();
       },
-      error: () => (this.erro = 'Não foi possível cadastrar item.')
+      error: () => {
+        this.excluindoSegmentoId = null;
+        this.erro = 'Não foi possível excluir segmento.';
+      }
     });
+  }
+
+  moverSegmentoParaCima(segmentoId: number): void {
+    if (this.salvandoOrdemSegmentos || this.excluindoSegmentoId !== null) return;
+    const index = this.segmentos.findIndex((segmento) => segmento.id === segmentoId);
+    if (index <= 0) return;
+    this.reordenarSegmentos(index, index - 1);
+  }
+
+  moverSegmentoParaBaixo(segmentoId: number): void {
+    if (this.salvandoOrdemSegmentos || this.excluindoSegmentoId !== null) return;
+    const index = this.segmentos.findIndex((segmento) => segmento.id === segmentoId);
+    if (index < 0 || index >= this.segmentos.length - 1) return;
+    this.reordenarSegmentos(index, index + 1);
+  }
+
+  cadastrarItem(): void {
+    if (this.itemForm.invalid || !this.auth.isAdmin()) return;
+    if (this.salvandoItem) return;
+
+    this.sucesso = '';
+    this.erro = '';
+    this.salvandoItem = true;
+
+    const value = this.itemForm.getRawValue();
+    this.api
+      .criarItem({
+        nome: value.nome || '',
+        preco: value.preco || 0,
+        categoriaIds: Array.from(this.categoriaIdsSelecionadas),
+        segmentoId: value.segmentoId,
+        imagem: this.imagemItemSelecionada
+      })
+      .subscribe({
+        next: () => {
+          this.salvandoItem = false;
+          this.itemForm.reset({ nome: '', preco: 0, segmentoId: null });
+          this.categoriaIdsSelecionadas.clear();
+          this.imagemItemSelecionada = null;
+          this.sucesso = 'Item cadastrado com sucesso.';
+          this.carregarItens();
+        },
+        error: () => {
+          this.salvandoItem = false;
+          this.erro = 'Não foi possível cadastrar item.';
+        }
+      });
   }
 
   selecionarImagemItem(event: Event): void {
@@ -204,6 +274,7 @@ export class ItensComponent implements OnInit {
     this.sucesso = '';
     this.itemEmEdicaoId = item.id;
     this.edicaoForm.reset({ nome: item.nome, preco: item.preco });
+    this.categoriaIdsEdicaoSelecionadas = new Set(item.categorias.map((categoria) => categoria.id));
     this.imagemEdicaoSelecionada = null;
     this.edicaoModalAberta = true;
   }
@@ -212,6 +283,7 @@ export class ItensComponent implements OnInit {
     this.edicaoModalAberta = false;
     this.itemEmEdicaoId = null;
     this.imagemEdicaoSelecionada = null;
+    this.categoriaIdsEdicaoSelecionadas.clear();
     this.edicaoForm.reset({ nome: '', preco: 0 });
   }
 
@@ -219,33 +291,45 @@ export class ItensComponent implements OnInit {
     if (this.itemEmEdicaoId == null) return;
     if (!this.auth.isAdmin() || this.edicaoForm.invalid) return;
     if (this.salvandoEdicao) return;
+
     this.erro = '';
     this.sucesso = '';
     this.salvandoEdicao = true;
     const value = this.edicaoForm.getRawValue();
 
-    this.api.atualizarItem(this.itemEmEdicaoId, {
-      nome: value.nome || '',
-      preco: value.preco || 0,
-      imagem: this.imagemEdicaoSelecionada
-    }).subscribe({
-      next: () => {
-        this.salvandoEdicao = false;
-        this.sucesso = 'Item atualizado com sucesso.';
-        this.cancelarEdicao();
-        this.carregarItens();
-      },
-      error: () => {
-        this.salvandoEdicao = false;
-        this.erro = 'Não foi possível atualizar item.';
-      }
-    });
+    this.api
+      .atualizarItem(this.itemEmEdicaoId, {
+        nome: value.nome || '',
+        preco: value.preco || 0,
+        categoriaIds: Array.from(this.categoriaIdsEdicaoSelecionadas),
+        imagem: this.imagemEdicaoSelecionada
+      })
+      .subscribe({
+        next: () => {
+          this.salvandoEdicao = false;
+          this.sucesso = 'Item atualizado com sucesso.';
+          this.cancelarEdicao();
+          this.carregarItens();
+        },
+        error: () => {
+          this.salvandoEdicao = false;
+          this.erro = 'Não foi possível atualizar item.';
+        }
+      });
   }
 
   selecionarImagemEdicao(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
     this.imagemEdicaoSelecionada = file;
+  }
+
+  toggleCategoriaEdicao(categoriaId: number, checked: boolean): void {
+    if (checked) {
+      this.categoriaIdsEdicaoSelecionadas.add(categoriaId);
+      return;
+    }
+    this.categoriaIdsEdicaoSelecionadas.delete(categoriaId);
   }
 
   excluirItem(itemId: number): void {
@@ -298,24 +382,26 @@ export class ItensComponent implements OnInit {
   }
 
   private carregarItens(): void {
-    this.api.listarItens({
-      nome: this.filtroNome,
-      page: this.paginaAtual,
-      size: this.tamanhoPagina
-    }).subscribe((response) => {
-      this.itens = response.itens;
-      this.paginaAtual = response.page;
-      this.tamanhoPagina = response.size;
-      this.totalPaginas = response.totalPages;
-      this.totalItens = response.totalElements;
-      this.primeiraPagina = response.first;
-      this.ultimaPagina = response.last;
+    this.api
+      .listarItens({
+        nome: this.filtroNome,
+        page: this.paginaAtual,
+        size: this.tamanhoPagina
+      })
+      .subscribe((response) => {
+        this.itens = response.itens;
+        this.paginaAtual = response.page;
+        this.tamanhoPagina = response.size;
+        this.totalPaginas = response.totalPages;
+        this.totalItens = response.totalElements;
+        this.primeiraPagina = response.first;
+        this.ultimaPagina = response.last;
 
-      if (this.paginaAtual > 0 && this.itens.length === 0 && this.totalItens > 0) {
-        this.paginaAtual -= 1;
-        this.carregarItens();
-      }
-    });
+        if (this.paginaAtual > 0 && this.itens.length === 0 && this.totalItens > 0) {
+          this.paginaAtual -= 1;
+          this.carregarItens();
+        }
+      });
   }
 
   private carregarCategorias(): void {
@@ -346,5 +432,29 @@ export class ItensComponent implements OnInit {
 
   categoriaExpandida(categoriaId: number): boolean {
     return this.categoriasExpandidas.has(categoriaId);
+  }
+
+  private reordenarSegmentos(indexOrigem: number, indexDestino: number): void {
+    const segmentosAnteriores = [...this.segmentos];
+    const segmentosReordenados = [...this.segmentos];
+    const [movido] = segmentosReordenados.splice(indexOrigem, 1);
+    segmentosReordenados.splice(indexDestino, 0, movido);
+
+    this.segmentos = segmentosReordenados;
+    this.salvandoOrdemSegmentos = true;
+    this.erro = '';
+    this.sucesso = '';
+
+    this.api.atualizarOrdemSegmentos(segmentosReordenados.map((segmento) => segmento.id)).subscribe({
+      next: () => {
+        this.salvandoOrdemSegmentos = false;
+        this.sucesso = 'Ordem dos segmentos atualizada com sucesso.';
+      },
+      error: () => {
+        this.salvandoOrdemSegmentos = false;
+        this.segmentos = segmentosAnteriores;
+        this.erro = 'Não foi possível atualizar a ordem dos segmentos.';
+      }
+    });
   }
 }

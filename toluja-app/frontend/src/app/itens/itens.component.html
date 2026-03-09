@@ -1,131 +1,38 @@
 <div class="alert alert-info" *ngIf="!auth.isAdmin()">
-  Cadastro de categorias e subitens disponível apenas para usuários ADMIN.
+  Cadastro de categorias, subitens e segmentos disponível apenas para usuários ADMIN.
 </div>
 
-<div class="card shadow-sm">
-  <div class="card-header bg-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Cadastros</h5>
-    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="toggleSecaoCadastros()">
-      {{ secaoCadastrosExpandida ? 'Recolher' : 'Expandir' }}
+<div class="row g-3 mb-4" *ngIf="auth.isAdmin()">
+  <div class="col-12 col-md-4">
+    <button class="card card-atalho h-100 w-100 text-start" type="button" (click)="abrirModalCadastro('itens')">
+      <div class="card-body">
+        <p class="text-muted small mb-2">Cadastro</p>
+        <h5 class="mb-1">Itens</h5>
+        <p class="mb-0 text-muted">Adicionar novo item ao cardápio</p>
+      </div>
     </button>
   </div>
-  <div class="card-body" *ngIf="secaoCadastrosExpandida">
-    <div class="row g-4" *ngIf="auth.isAdmin()">
-      <div class="col-12 col-xl-4">
-        <div class="card border h-100">
-          <div class="card-body">
-            <h5 class="card-title mb-3">Categoria de subitens</h5>
-            <form [formGroup]="categoriaForm" (ngSubmit)="cadastrarCategoria()" class="d-grid gap-2 mb-4">
-              <input class="form-control" formControlName="nome" placeholder="Ex: Adicionais" />
-              <button class="btn btn-primary" type="submit">Salvar categoria</button>
-            </form>
-
-            <h6 class="mb-2">Novo subitem</h6>
-            <form [formGroup]="subitemForm" (ngSubmit)="cadastrarSubitem()" class="d-grid gap-2">
-              <select class="form-select" formControlName="categoriaId">
-                <option [ngValue]="null">Selecione a categoria</option>
-                <option *ngFor="let categoria of categorias" [ngValue]="categoria.id">{{ categoria.nome }}</option>
-              </select>
-              <input class="form-control" formControlName="nome" placeholder="Ex: Queijo" />
-              <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
-              <button class="btn btn-outline-primary" type="submit">Salvar subitem</button>
-            </form>
-
-            <hr class="my-4" />
-
-            <h6 class="mb-2">Novo segmento</h6>
-            <form [formGroup]="segmentoForm" (ngSubmit)="cadastrarSegmento()" class="d-grid gap-2">
-              <input class="form-control" formControlName="nome" placeholder="Ex: Bebidas" />
-              <div class="d-flex gap-2">
-                <input class="form-control form-control-color" type="color" formControlName="cor" title="Cor do segmento" />
-                <select class="form-select" formControlName="icone">
-                  <option *ngFor="let icone of iconesBasicos" [ngValue]="icone.value">{{ icone.label }}</option>
-                </select>
-              </div>
-              <button class="btn btn-outline-dark" type="submit">Salvar segmento</button>
-            </form>
-          </div>
-        </div>
+  <div class="col-12 col-md-4">
+    <button class="card card-atalho h-100 w-100 text-start" type="button" (click)="abrirModalCadastro('subitens')">
+      <div class="card-body">
+        <p class="text-muted small mb-2">Cadastro</p>
+        <h5 class="mb-1">Subitens</h5>
+        <p class="mb-0 text-muted">Categorias e subitens</p>
       </div>
-
-      <div class="col-12 col-xl-4">
-        <div class="card border h-100">
-          <div class="card-body">
-            <h5 class="card-title mb-3">Categorias e subitens</h5>
-            <div *ngFor="let categoria of categorias" class="mb-3 border rounded p-2">
-              <button
-                type="button"
-                class="btn btn-sm w-100 d-flex justify-content-between align-items-center p-0 border-0 bg-transparent"
-                (click)="toggleCategoriaSubitens(categoria.id)"
-              >
-                <strong class="text-start">{{ categoria.nome }}</strong>
-                <span class="text-muted small">
-                  {{ categoriaExpandida(categoria.id) ? 'Ocultar' : 'Exibir' }} ({{ categoria.subitens.length }})
-                </span>
-              </button>
-
-              <ul class="mb-0 mt-2" *ngIf="categoriaExpandida(categoria.id)">
-                <li *ngFor="let subitem of categoria.subitens">
-                  <div class="d-flex justify-content-between align-items-center gap-2">
-                    <span>{{ subitem.nome }} - R$ {{ subitem.preco | number:'1.2-2' }}</span>
-                    <button
-                      class="btn btn-sm btn-outline-danger"
-                      type="button"
-                      title="Excluir subitem"
-                      aria-label="Excluir subitem"
-                      (click)="excluirSubitem(categoria.id, subitem.id)"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+    </button>
+  </div>
+  <div class="col-12 col-md-4">
+    <button class="card card-atalho h-100 w-100 text-start" type="button" (click)="abrirModalCadastro('segmentos')">
+      <div class="card-body">
+        <p class="text-muted small mb-2">Cadastro</p>
+        <h5 class="mb-1">Segmento</h5>
+        <p class="mb-0 text-muted">Adicionar e excluir segmentos</p>
       </div>
-
-      <div class="col-12 col-xl-4">
-        <div class="card border h-100">
-          <div class="card-body">
-            <h5 class="card-title mb-3">Cadastrar item</h5>
-            <form [formGroup]="itemForm" (ngSubmit)="cadastrarItem()" class="d-grid gap-2">
-              <input class="form-control" formControlName="nome" placeholder="Nome do item" />
-              <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço base" />
-              <select class="form-select" formControlName="segmentoId">
-                <option [ngValue]="null">Sem segmento</option>
-                <option *ngFor="let segmento of segmentos" [ngValue]="segmento.id">{{ segmento.nome }}</option>
-              </select>
-              <div>
-                <label class="form-label mb-1">Imagem do produto</label>
-                <input class="form-control" type="file" accept="image/png,image/jpeg,image/webp" (change)="selecionarImagemItem($event)" />
-                <small class="text-muted" *ngIf="imagemItemSelecionada">{{ imagemItemSelecionada.name }}</small>
-              </div>
-
-              <label class="form-label mt-2 mb-1">Categorias permitidas</label>
-              <div class="border rounded p-2" style="max-height: 190px; overflow: auto;">
-                <div class="form-check" *ngFor="let categoria of categorias">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    [id]="'categoria-' + categoria.id"
-                    [checked]="categoriaIdsSelecionadas.has(categoria.id)"
-                    (change)="toggleCategoriaItem(categoria.id, $any($event.target).checked)"
-                  />
-                  <label class="form-check-label" [for]="'categoria-' + categoria.id">{{ categoria.nome }}</label>
-                </div>
-              </div>
-
-              <button class="btn btn-success mt-2" type="submit">Salvar item</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    </button>
   </div>
 </div>
 
-<div class="card shadow-sm mt-4">
+<div class="card shadow-sm mt-2">
   <div class="card-header bg-white d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Itens cadastrados</h5>
     <button class="btn btn-sm btn-outline-secondary" type="button" (click)="toggleSecaoItens()">
@@ -199,9 +106,7 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" *ngIf="totalPaginas > 0">
-      <span class="text-muted small">
-        {{ totalItens }} item(ns) no total
-      </span>
+      <span class="text-muted small">{{ totalItens }} item(ns) no total</span>
       <nav aria-label="Paginação dos itens">
         <ul class="pagination pagination-sm mb-0">
           <li class="page-item" [class.disabled]="primeiraPagina">
@@ -215,6 +120,175 @@
           </li>
         </ul>
       </nav>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop-custom" *ngIf="modalCadastroAberta" (click)="fecharModalCadastro()"></div>
+<div class="modal modal-custom d-block" *ngIf="modalCadastroAberta" tabindex="-1" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" *ngIf="modalAberta('itens')">Cadastrar item</h5>
+        <h5 class="modal-title" *ngIf="modalAberta('subitens')">Categoria de subitens e subitens</h5>
+        <h5 class="modal-title" *ngIf="modalAberta('segmentos')">Segmentos</h5>
+        <button type="button" class="btn-close" aria-label="Fechar" (click)="fecharModalCadastro()"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="modalAberta('itens')">
+        <form [formGroup]="itemForm" (ngSubmit)="cadastrarItem()" class="d-grid gap-2">
+          <input class="form-control" formControlName="nome" placeholder="Nome do item" />
+          <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço base" />
+          <select class="form-select" formControlName="segmentoId">
+            <option [ngValue]="null">Sem segmento</option>
+            <option *ngFor="let segmento of segmentos" [ngValue]="segmento.id">{{ segmento.nome }}</option>
+          </select>
+          <div>
+            <label class="form-label mb-1">Imagem do produto</label>
+            <input class="form-control" type="file" accept="image/png,image/jpeg,image/webp" (change)="selecionarImagemItem($event)" />
+            <small class="text-muted" *ngIf="imagemItemSelecionada">{{ imagemItemSelecionada.name }}</small>
+          </div>
+
+          <label class="form-label mt-2 mb-1">Categorias permitidas</label>
+          <div class="border rounded p-2" style="max-height: 200px; overflow: auto;">
+            <div class="form-check" *ngFor="let categoria of categorias">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                [id]="'categoria-' + categoria.id"
+                [checked]="categoriaIdsSelecionadas.has(categoria.id)"
+                (change)="toggleCategoriaItem(categoria.id, $any($event.target).checked)"
+              />
+              <label class="form-check-label" [for]="'categoria-' + categoria.id">{{ categoria.nome }}</label>
+            </div>
+          </div>
+
+          <button class="btn btn-success mt-2 d-flex align-items-center justify-content-center gap-2" type="submit" [disabled]="itemForm.invalid || salvandoItem">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" *ngIf="salvandoItem"></span>
+            <span>{{ salvandoItem ? 'Salvando...' : 'Salvar item' }}</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="modal-body" *ngIf="modalAberta('subitens')">
+        <div class="row g-4">
+          <div class="col-12 col-xl-5">
+            <h6 class="mb-3">Categoria de subitens</h6>
+            <form [formGroup]="categoriaForm" (ngSubmit)="cadastrarCategoria()" class="d-grid gap-2 mb-4">
+              <input class="form-control" formControlName="nome" placeholder="Ex: Adicionais" />
+              <button class="btn btn-primary" type="submit">Salvar categoria</button>
+            </form>
+
+            <h6 class="mb-3">Novo subitem</h6>
+            <form [formGroup]="subitemForm" (ngSubmit)="cadastrarSubitem()" class="d-grid gap-2">
+              <select class="form-select" formControlName="categoriaId">
+                <option [ngValue]="null">Selecione a categoria</option>
+                <option *ngFor="let categoria of categorias" [ngValue]="categoria.id">{{ categoria.nome }}</option>
+              </select>
+              <input class="form-control" formControlName="nome" placeholder="Ex: Queijo" />
+              <input class="form-control" type="number" formControlName="preco" step="0.01" placeholder="Preço" />
+              <button class="btn btn-outline-primary" type="submit">Salvar subitem</button>
+            </form>
+          </div>
+
+          <div class="col-12 col-xl-7">
+            <h6 class="mb-3">Categorias e subitens</h6>
+            <div *ngFor="let categoria of categorias" class="mb-3 border rounded p-2">
+              <button
+                type="button"
+                class="btn btn-sm w-100 d-flex justify-content-between align-items-center p-0 border-0 bg-transparent"
+                (click)="toggleCategoriaSubitens(categoria.id)"
+              >
+                <strong class="text-start">{{ categoria.nome }}</strong>
+                <span class="text-muted small">
+                  {{ categoriaExpandida(categoria.id) ? 'Ocultar' : 'Exibir' }} ({{ categoria.subitens.length }})
+                </span>
+              </button>
+
+              <ul class="mb-0 mt-2" *ngIf="categoriaExpandida(categoria.id)">
+                <li *ngFor="let subitem of categoria.subitens">
+                  <div class="d-flex justify-content-between align-items-center gap-2">
+                    <span>{{ subitem.nome }} - R$ {{ subitem.preco | number:'1.2-2' }}</span>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      type="button"
+                      title="Excluir subitem"
+                      aria-label="Excluir subitem"
+                      (click)="excluirSubitem(categoria.id, subitem.id)"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body" *ngIf="modalAberta('segmentos')">
+        <div class="row g-4">
+          <div class="col-12 col-lg-6">
+            <h6 class="mb-3">Novo segmento</h6>
+            <form [formGroup]="segmentoForm" (ngSubmit)="cadastrarSegmento()" class="d-grid gap-2">
+              <input class="form-control" formControlName="nome" placeholder="Ex: Bebidas" />
+              <div class="d-flex gap-2">
+                <input class="form-control form-control-color" type="color" formControlName="cor" title="Cor do segmento" />
+                <select class="form-select" formControlName="icone">
+                  <option *ngFor="let icone of iconesBasicos" [ngValue]="icone.value">{{ icone.label }}</option>
+                </select>
+              </div>
+              <button class="btn btn-outline-dark" type="submit">Salvar segmento</button>
+            </form>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <h6 class="mb-3">Segmentos cadastrados</h6>
+            <div class="list-group" *ngIf="segmentos.length > 0; else semSegmentos">
+              <div class="list-group-item d-flex justify-content-between align-items-center gap-2" *ngFor="let segmento of segmentos; let i = index">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="segmento-cor" [style.background-color]="segmento.cor"></span>
+                  <span>{{ segmento.nome }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    type="button"
+                    title="Mover para cima"
+                    aria-label="Mover para cima"
+                    [disabled]="i === 0 || salvandoOrdemSegmentos || excluindoSegmentoId !== null"
+                    (click)="moverSegmentoParaCima(segmento.id)"
+                  >
+                    <i class="bi bi-arrow-up"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    type="button"
+                    title="Mover para baixo"
+                    aria-label="Mover para baixo"
+                    [disabled]="i === segmentos.length - 1 || salvandoOrdemSegmentos || excluindoSegmentoId !== null"
+                    (click)="moverSegmentoParaBaixo(segmento.id)"
+                  >
+                    <i class="bi bi-arrow-down"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    type="button"
+                    [disabled]="excluindoSegmentoId === segmento.id || salvandoOrdemSegmentos"
+                    (click)="excluirSegmento(segmento.id)"
+                  >
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true" *ngIf="excluindoSegmentoId === segmento.id"></span>
+                    <i class="bi bi-trash" *ngIf="excluindoSegmentoId !== segmento.id"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <ng-template #semSegmentos>
+              <p class="text-muted mb-0">Nenhum segmento cadastrado.</p>
+            </ng-template>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -241,6 +315,21 @@
             <label class="form-label">Imagem</label>
             <input class="form-control" type="file" accept="image/png,image/jpeg,image/webp" (change)="selecionarImagemEdicao($event)" />
             <small class="text-muted" *ngIf="imagemEdicaoSelecionada">{{ imagemEdicaoSelecionada.name }}</small>
+          </div>
+          <div>
+            <label class="form-label mb-1">Categorias permitidas (subitens)</label>
+            <div class="border rounded p-2" style="max-height: 200px; overflow: auto;">
+              <div class="form-check" *ngFor="let categoria of categorias">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [id]="'categoria-edicao-' + categoria.id"
+                  [checked]="categoriaIdsEdicaoSelecionadas.has(categoria.id)"
+                  (change)="toggleCategoriaEdicao(categoria.id, $any($event.target).checked)"
+                />
+                <label class="form-check-label" [for]="'categoria-edicao-' + categoria.id">{{ categoria.nome }}</label>
+              </div>
+            </div>
           </div>
         </form>
       </div>
