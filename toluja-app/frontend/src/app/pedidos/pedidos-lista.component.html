@@ -1,9 +1,51 @@
 <div class="card shadow-sm">
   <div class="card-body">
     <h5 class="card-title mb-3">Lista de Pedidos</h5>
+    <form class="row g-2 mb-3" (ngSubmit)="aplicarFiltros()">
+      <div class="col-12 col-md-3">
+        <label class="form-label small text-muted mb-1">Código</label>
+        <input class="form-control form-control-sm" type="text" [(ngModel)]="filtroCodigo" name="filtroCodigo" />
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Senha</label>
+        <input class="form-control form-control-sm" type="text" [(ngModel)]="filtroSenha" name="filtroSenha" />
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Status</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filtroStatus" name="filtroStatus">
+          <option value="">Todos</option>
+          <option *ngFor="let status of statusesDisponiveis" [ngValue]="status">{{ status }}</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-5">
+        <label class="form-label small text-muted mb-1">Texto (código, status, observação, itens)</label>
+        <input class="form-control form-control-sm" type="text" [(ngModel)]="filtroTexto" name="filtroTexto" />
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Total mín.</label>
+        <input class="form-control form-control-sm" type="number" step="0.01" [(ngModel)]="filtroTotalMinimo" name="filtroTotalMinimo" />
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Total máx.</label>
+        <input class="form-control form-control-sm" type="number" step="0.01" [(ngModel)]="filtroTotalMaximo" name="filtroTotalMaximo" />
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small text-muted mb-1">Data inicial</label>
+        <input class="form-control form-control-sm" type="date" [(ngModel)]="filtroDataInicio" name="filtroDataInicio" />
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small text-muted mb-1">Data final</label>
+        <input class="form-control form-control-sm" type="date" [(ngModel)]="filtroDataFim" name="filtroDataFim" />
+      </div>
+      <div class="col-12 col-md-2 d-flex align-items-end gap-2">
+        <button class="btn btn-sm btn-primary w-100" type="submit">Filtrar</button>
+        <button class="btn btn-sm btn-outline-secondary w-100" type="button" (click)="limparFiltros()">Limpar</button>
+      </div>
+    </form>
+
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
       <small class="text-muted">
-        Mostrando {{ inicioRegistro }}-{{ fimRegistro }} de {{ pedidos.length }} pedido(s)
+        Mostrando {{ inicioRegistro }}-{{ fimRegistro }} de {{ pedidosFiltrados.length }} pedido(s)
       </small>
       <div class="d-flex align-items-center gap-2">
         <label class="form-label mb-0 small text-muted" for="tamanho-pagina">Por página</label>
@@ -38,25 +80,35 @@
             <td class="text-end">R$ {{ pedido.total | number:'1.2-2' }}</td>
             <td><span [class]="statusClass(pedido.status)">{{ pedido.status }}</span></td>
             <td class="text-end">
-              <button
-                class="btn btn-sm btn-outline-primary"
-                [disabled]="imprimindoPedidoId === pedido.id"
-                (click)="reimprimir(pedido)"
-                title="Imprimir novamente"
-                aria-label="Imprimir novamente"
-              >
-                <i *ngIf="imprimindoPedidoId !== pedido.id" class="bi bi-printer"></i>
-                <span *ngIf="imprimindoPedidoId === pedido.id" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              </button>
+              <div class="d-inline-flex gap-1">
+                <button
+                  class="btn btn-sm btn-outline-info"
+                  (click)="visualizar(pedido)"
+                  title="Visualizar detalhes"
+                  aria-label="Visualizar detalhes"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  [disabled]="imprimindoPedidoId === pedido.id"
+                  (click)="reimprimir(pedido)"
+                  title="Imprimir novamente"
+                  aria-label="Imprimir novamente"
+                >
+                  <i *ngIf="imprimindoPedidoId !== pedido.id" class="bi bi-printer"></i>
+                  <span *ngIf="imprimindoPedidoId === pedido.id" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="pedidos.length === 0">
+          <tr *ngIf="pedidosFiltrados.length === 0">
             <td colspan="6" class="text-center text-muted py-4">Nenhum pedido encontrado.</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="d-flex justify-content-end align-items-center gap-2 mt-3" *ngIf="pedidos.length > 0">
+    <div class="d-flex justify-content-end align-items-center gap-2 mt-3" *ngIf="pedidosFiltrados.length > 0">
       <button class="btn btn-sm btn-outline-secondary" [disabled]="paginaAtual === 1" (click)="irParaPagina(paginaAtual - 1)">
         Anterior
       </button>
@@ -71,5 +123,42 @@
     </div>
     <div class="alert alert-success mt-3 mb-0" *ngIf="sucesso">{{ sucesso }}</div>
     <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
+  </div>
+</div>
+
+<div class="modal-backdrop-custom" *ngIf="modalVisualizacaoAberta" (click)="fecharVisualizacao()"></div>
+<div class="modal modal-custom d-block" *ngIf="modalVisualizacaoAberta" tabindex="-1" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" *ngIf="pedidoVisualizacao as pedido">
+      <div class="modal-header">
+        <h5 class="modal-title">Conferência do pedido {{ pedido.codigo }}</h5>
+        <button type="button" class="btn-close" aria-label="Fechar" (click)="fecharVisualizacao()"></button>
+      </div>
+      <div class="modal-body d-grid gap-2">
+        <div><strong>Senha:</strong> {{ pedido.senhaChamada | number:'2.0-0' }}</div>
+        <div><strong>Código:</strong> {{ pedido.codigo }}</div>
+        <div><strong>Data:</strong> {{ pedido.criadoEm | date:'d/M/yy, h:mm a' }}</div>
+        <div><strong>Status:</strong> {{ pedido.status }}</div>
+        <div><strong>Total:</strong> R$ {{ pedido.total | number:'1.2-2' }}</div>
+        <div *ngIf="pedido.observacao"><strong>Observação:</strong> {{ pedido.observacao }}</div>
+        <hr class="my-2" />
+        <div><strong>Itens:</strong></div>
+        <div class="small border rounded p-2" *ngFor="let item of pedido.itens">
+          <div>
+            {{ item.nomeSnapshot || item.nomeItem || 'Item' }} x{{ item.quantidade }}
+            <span class="text-muted">- R$ {{ (item.subtotal || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="text-muted" *ngIf="item.subitens?.length">
+            Adicionais:
+            <span *ngFor="let subitem of item.subitens; let last = last">
+              {{ subitem.nomeSnapshot }}<span *ngIf="!last">, </span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="fecharVisualizacao()">Fechar</button>
+      </div>
+    </div>
   </div>
 </div>
