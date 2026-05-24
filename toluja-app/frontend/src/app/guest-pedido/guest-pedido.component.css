@@ -1,23 +1,34 @@
-.cursor-pointer { cursor: pointer; }
-.card:hover { transform: translateY(-1px); transition: all .15s ease-in-out; }
-.item-card-image {
-  width: 100%;
-  height: 132px;
-  object-fit: cover;
-}
-
 :host {
   display: block;
   padding-bottom: 96px;
 }
 
-.nav-tabs .nav-link {
-  color: #495057;
+.cursor-pointer {
+  cursor: pointer;
 }
 
-.nav-tabs .nav-link.active {
-  background-color: #f8f9fa;
-  border-bottom-color: #f8f9fa;
+.card.cursor-pointer,
+.row-cols-1 .card {
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.card.cursor-pointer:hover,
+.row-cols-1 .card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(15, 118, 110, 0.24);
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.12);
+}
+
+.item-card-image {
+  width: 100%;
+  height: 158px;
+  object-fit: cover;
+  background: #eef3ef;
+}
+
+.sticky-top {
+  top: 1.25rem !important;
 }
 
 .guest-ads-footer {
@@ -28,25 +39,27 @@
   z-index: 1030;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(90deg, #0d6efd 0%, #0b5ed7 100%);
+  padding: 0.8rem 1rem;
+  background: linear-gradient(90deg, #182032 0%, var(--app-brand) 52%, var(--app-accent) 100%);
   color: #fff;
-  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 -14px 34px rgba(15, 23, 42, 0.2);
 }
 
 .guest-ads-badge {
-  background: #fff;
-  color: #0b5ed7;
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--app-brand-dark);
+  font-weight: 900;
   font-size: 0.72rem;
   line-height: 1;
-  padding: 0.35rem 0.5rem;
+  padding: 0.38rem 0.55rem;
   border-radius: 999px;
   text-transform: uppercase;
 }
 
 .guest-ads-text {
+  max-width: 900px;
   font-size: 0.95rem;
   line-height: 1.25;
 }
@@ -54,7 +67,6 @@
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
   z-index: 1040;
 }
 
@@ -64,7 +76,7 @@
 
 @media (max-width: 767.98px) {
   :host {
-    padding-bottom: 122px;
+    padding-bottom: 128px;
   }
 
   .guest-ads-footer {
