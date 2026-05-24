@@ -146,6 +146,13 @@ export class ApiService {
     return this.http.put<TenantConfig>('/api/configuracao/tenant', payload);
   }
 
+  baixarPacoteAgente(plataforma: 'windows' | 'linux') {
+    return this.http.get(`/api/configuracao/tenant/print-agent/${plataforma}`, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
+
   listarTenantsPainel() {
     return this.http.get<TenantSummary[]>('/api/superadmin/tenants');
   }

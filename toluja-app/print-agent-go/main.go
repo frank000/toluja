@@ -71,6 +71,8 @@ var (
 	buildTime = "unknown"
 )
 
+const embeddedConfigMarker = "\n--TOLUJA-PRINT-AGENT-CONFIG-V1--\n"
+
 func main() {
 	loadDotEnvIfPresent()
 
@@ -296,6 +298,14 @@ func loadConfig() (config, error) {
 		return cfgFromFile, nil
 	}
 
+	cfgFromExe, loadedFromExe, err := loadConfigFromExecutable()
+	if err != nil {
+		return config{}, err
+	}
+	if loadedFromExe {
+		return cfgFromExe, nil
+	}
+
 	poll := 1000
 	if v := strings.TrimSpace(os.Getenv("POLL_INTERVAL_MS")); v != "" {
 		_, err := fmt.Sscanf(v, "%d", &poll)
@@ -354,9 +364,45 @@ func loadConfigFromJSONPath(path string) (config, bool, error) {
 		return config{}, false, err
 	}
 
+	cfg, err := parseJSONConfig(content, path)
+	return cfg, true, err
+}
+
+func loadConfigFromExecutable() (config, bool, error) {
+	exePath, err := os.Executable()
+	if err != nil {
+		return config{}, false, nil
+	}
+
+	content, err := os.ReadFile(filepath.Clean(exePath))
+	if err != nil {
+		return config{}, false, nil
+	}
+
+	marker := []byte(embeddedConfigMarker)
+	idx := bytes.LastIndex(content, marker)
+	if idx < 0 {
+		return config{}, false, nil
+	}
+
+	encoded := strings.TrimSpace(string(content[idx+len(marker):]))
+	if encoded == "" {
+		return config{}, false, errors.New("embedded executable config is empty")
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return config{}, false, fmt.Errorf("invalid embedded executable config: %w", err)
+	}
+
+	cfg, err := parseJSONConfig(decoded, "embedded executable config")
+	return cfg, true, err
+}
+
+func parseJSONConfig(content []byte, source string) (config, error) {
 	var parsed fileConfig
 	if err := json.Unmarshal(content, &parsed); err != nil {
-		return config{}, false, fmt.Errorf("invalid %s: %w", path, err)
+		return config{}, fmt.Errorf("invalid %s: %w", source, err)
 	}
 
 	poll := parsed.PollIntervalMs
@@ -374,9 +420,9 @@ func loadConfigFromJSONPath(path string) (config, bool, error) {
 		PollIntervalMs: poll,
 	}
 	if cfg.APIBaseURL == "" || cfg.DeviceID == "" || cfg.PrintKey == "" {
-		return config{}, false, fmt.Errorf("required fields in %s: apiBaseUrl, deviceId, printKey", path)
+		return config{}, fmt.Errorf("required fields in %s: apiBaseUrl, deviceId, printKey", source)
 	}
-	return cfg, true, nil
+	return cfg, nil
 }
 
 func loadDotEnvIfPresent() {

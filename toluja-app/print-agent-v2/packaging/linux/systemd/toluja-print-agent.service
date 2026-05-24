@@ -1,0 +1,14 @@
+[Unit]
+Description=Toluja Print Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/toluja/print-agent
+ExecStart=/opt/toluja/print-agent/runtime/bin/java -jar /opt/toluja/print-agent/app/toluja-print-agent.jar --config /etc/toluja/print-agent/config.json
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

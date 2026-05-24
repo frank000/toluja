@@ -35,9 +35,21 @@
       <div class="form-text">Formato: (55) + DDD + número.</div>
     </div>
 
-    <button class="btn btn-primary" type="button" (click)="salvar()" [disabled]="carregando || salvando">
-      {{ salvando ? 'Salvando...' : 'Salvar configuração' }}
-    </button>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-primary" type="button" (click)="salvar()" [disabled]="carregando || salvando">
+        {{ salvando ? 'Salvando...' : 'Salvar configuração' }}
+      </button>
+      <button class="btn btn-outline-primary" type="button" (click)="baixarPacote('windows')" [disabled]="carregando || salvando || baixandoWindows || baixandoLinux">
+        {{ baixandoWindows ? 'Gerando Windows...' : 'Baixar agente Windows (.exe)' }}
+      </button>
+      <button class="btn btn-outline-secondary" type="button" (click)="baixarPacote('linux')" [disabled]="carregando || salvando || baixandoWindows || baixandoLinux">
+        {{ baixandoLinux ? 'Gerando Linux...' : 'Baixar agente Linux (.tar.gz)' }}
+      </button>
+    </div>
+
+    <p class="text-muted small mt-3 mb-0">
+      O agente sai com os dados do tenant preenchidos. O nome real da impressora ainda precisa estar configurado no backend para os jobs de impressao.
+    </p>
 
     <div class="alert alert-danger mt-3 mb-0" *ngIf="erro">{{ erro }}</div>
     <div class="alert alert-success mt-3 mb-0" *ngIf="sucesso">{{ sucesso }}</div>

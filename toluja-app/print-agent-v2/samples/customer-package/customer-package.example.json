@@ -1,0 +1,25 @@
+{
+  "clientSlug": "cliente-x",
+  "storeSlug": "loja-001",
+  "agentVersion": "0.1.0-dev",
+  "config": {
+    "apiBaseUrl": "https://app.toluja.com.br",
+    "tenantId": "cliente-x",
+    "storeId": "loja-001",
+    "deviceId": "agent-loja-001",
+    "printKey": "CHANGE_ME",
+    "pollIntervalMs": 1000,
+    "httpTimeoutMs": 20000,
+    "apiRetryAttempts": 3,
+    "apiRetryBackoffMs": 500,
+    "printTimeoutMs": 30000,
+    "printers": [
+      {
+        "id": "balcao",
+        "name": "Balcao",
+        "channel": "WINDOWS_QUEUE",
+        "destination": "EPSON TM-T20X Receipt"
+      }
+    ]
+  }
+}

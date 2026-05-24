@@ -1,0 +1,21 @@
+<service>
+  <id>TolujaPrintAgent</id>
+  <name>Toluja Print Agent</name>
+  <description>Agente local de impressao do Toluja</description>
+
+  <executable>%BASE%\runtime\bin\javaw.exe</executable>
+  <arguments>-jar "%BASE%\app\toluja-print-agent.jar" --config "%PROGRAMDATA%\Toluja\PrintAgent\config.json"</arguments>
+  <workingdirectory>%BASE%</workingdirectory>
+
+  <logpath>%PROGRAMDATA%\Toluja\PrintAgent\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10485760</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
+  <onfailure action="restart" delay="5 sec" />
+  <onfailure action="restart" delay="10 sec" />
+  <onfailure action="restart" delay="30 sec" />
+</service>

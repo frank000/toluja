@@ -1,0 +1,54 @@
+services:
+  db-wp:
+    image: mariadb:11.4
+    container_name: toluja-db-wp
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${WP_DB_NAME}
+      MYSQL_USER: ${WP_DB_USER}
+      MYSQL_PASSWORD: ${WP_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${WP_DB_ROOT_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -p${WP_DB_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - wp_db_data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:${WORDPRESS_IMAGE_TAG}
+    container_name: toluja-wordpress
+    restart: unless-stopped
+    depends_on:
+      db-wp:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db-wp:3306
+      WORDPRESS_DB_NAME: ${WP_DB_NAME}
+      WORDPRESS_DB_USER: ${WP_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WP_DB_PASSWORD}
+      WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX}
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', '${WORDPRESS_SITE_URL}');
+        define('WP_SITEURL', '${WORDPRESS_SITE_URL}');
+        define('FORCE_SSL_ADMIN', true);
+    ports:
+      - 8081:80
+    volumes:
+      - wp_content_data:/var/www/html/wp-content
+      - ./wordpress/toluja-go-landing:/var/www/html/wp-content/themes/toluja-go-landing:ro
+    networks:
+      - default
+      - proxy
+
+volumes:
+  wp_db_data:
+  wp_content_data:
+
+networks:
+  proxy:
+    external: true

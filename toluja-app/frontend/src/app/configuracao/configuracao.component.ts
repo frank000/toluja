@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
 import { ApiService } from '../core/api.service';
 
 @Component({
@@ -15,6 +16,8 @@ export class ConfiguracaoComponent implements OnInit {
   whatsappNumero = '';
   carregando = false;
   salvando = false;
+  baixandoWindows = false;
+  baixandoLinux = false;
   erro = '';
   sucesso = '';
 
@@ -62,6 +65,31 @@ export class ConfiguracaoComponent implements OnInit {
     });
   }
 
+  baixarPacote(plataforma: 'windows' | 'linux'): void {
+    const emDownload = plataforma === 'windows' ? this.baixandoWindows : this.baixandoLinux;
+    if (emDownload) return;
+
+    this.erro = '';
+    this.sucesso = '';
+    if (plataforma === 'windows') {
+      this.baixandoWindows = true;
+    } else {
+      this.baixandoLinux = true;
+    }
+
+    this.api.baixarPacoteAgente(plataforma).subscribe({
+      next: (response) => {
+        this.downloadBlob(response, this.nomeFallbackPacote(plataforma));
+        this.sucesso = `Pacote do agente para ${plataforma === 'windows' ? 'Windows' : 'Linux'} gerado com sucesso.`;
+        this.finalizarDownload(plataforma);
+      },
+      error: () => {
+        this.erro = `Nao foi possivel baixar o pacote do agente para ${plataforma === 'windows' ? 'Windows' : 'Linux'}.`;
+        this.finalizarDownload(plataforma);
+      }
+    });
+  }
+
   aoDigitarWhatsapp(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.whatsappNumero = this.maskWhatsapp(input.value);
@@ -91,5 +119,35 @@ export class ConfiguracaoComponent implements OnInit {
     if (middle) masked += ` ${middle}`;
     if (end) masked += `-${end}`;
     return masked;
+  }
+
+  private finalizarDownload(plataforma: 'windows' | 'linux'): void {
+    if (plataforma === 'windows') {
+      this.baixandoWindows = false;
+    } else {
+      this.baixandoLinux = false;
+    }
+  }
+
+  private nomeFallbackPacote(plataforma: 'windows' | 'linux'): string {
+    return plataforma === 'windows'
+      ? 'toluja-print-agent-windows.exe'
+      : 'toluja-print-agent-linux.tar.gz';
+  }
+
+  private downloadBlob(response: HttpResponse<Blob>, fallbackName: string): void {
+    const blob = response.body;
+    if (!blob) {
+      throw new Error('Arquivo nao retornado pelo servidor.');
+    }
+    const contentDisposition = response.headers.get('content-disposition') || '';
+    const match = contentDisposition.match(/filename=\"?([^\";]+)\"?/i);
+    const fileName = match?.[1] || fallbackName;
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
   }
 }
