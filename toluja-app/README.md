@@ -232,6 +232,8 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml pull
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
 
+O compose de produção mantém os uploads dos itens no volume Docker `image_data`, montado em `/app/data/images` no backend. Não use `docker compose down -v` em produção sem backup, porque isso apaga banco e imagens.
+
 ## Nginx Proxy Manager em compose separado
 
 Arquivo pronto: `docker-compose.npm.yml`.

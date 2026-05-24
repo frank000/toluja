@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriUtils;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -17,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -79,7 +81,7 @@ public class ItemImageStorageService {
         if (imagePath == null || imagePath.isBlank()) {
             return null;
         }
-        return "/api/public/item-images/" + imagePath;
+        return "/api/public/item-images/" + UriUtils.encodePathSegment(imagePath, StandardCharsets.UTF_8);
     }
 
     public void deleteIfExists(String imagePath) {

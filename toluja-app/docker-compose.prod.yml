@@ -26,6 +26,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       APP_JWT_SECRET: ${APP_JWT_SECRET}
       APP_CORS_ALLOWED_ORIGIN_PATTERNS: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS}
+      APP_IMAGES_BASE_DIR: ${APP_IMAGES_BASE_DIR:-/app/data/images}
       PRINTERS_MODE: ${PRINTERS_MODE}
       PRINTERS_PRINTER1: ${PRINTERS_PRINTER1}
       PRINTERS_PRINTER2: ${PRINTERS_PRINTER2}
@@ -37,6 +38,8 @@ services:
         condition: service_healthy
     expose:
       - "8080"
+    volumes:
+      - image_data:/app/data/images
 
   frontend:
     image: ${FRONTEND_IMAGE}
@@ -52,6 +55,7 @@ services:
 
 volumes:
   db_data:
+  image_data:
 
 networks:
   proxy:
