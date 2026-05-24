@@ -1,16 +1,17 @@
 .status-badge {
-  display: inline-block;
-  padding: 0.35rem 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.38rem 0.62rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 900;
   line-height: 1;
-  letter-spacing: 0.02em;
 }
 
 .status-badge--aberto {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 .status-badge--whatsapp {
@@ -19,29 +20,28 @@
 }
 
 .status-badge--erro-impressao {
-  background-color: #ffe5d0;
-  color: #a04a00;
+  background-color: #ffedd5;
+  color: #9a3412;
 }
 
 .status-badge--impresso {
-  background-color: #d1e7dd;
-  color: #0f5132;
+  background-color: #dcfce7;
+  color: #166534;
 }
 
 .status-badge--cancelado {
-  background-color: #f8d7da;
-  color: #842029;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 .status-badge--default {
-  background-color: #e9ecef;
-  color: #495057;
+  background-color: #eef2f7;
+  color: #475569;
 }
 
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
   z-index: 1040;
 }
 

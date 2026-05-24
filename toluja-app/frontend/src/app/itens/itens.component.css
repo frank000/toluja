@@ -1,27 +1,43 @@
 .card-atalho {
-  border: 1px solid #dfe3e6;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  background: #fff;
+  position: relative;
+  overflow: hidden;
+  min-height: 148px;
+  border: 1px solid rgba(221, 229, 223, 0.86);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 249, 0.92)),
+    var(--app-surface);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.card-atalho::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--app-brand), var(--app-accent));
 }
 
 .card-atalho:hover {
-  transform: translateY(-2px);
-  border-color: #0d6efd;
-  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.12);
+  transform: translateY(-3px);
+  border-color: rgba(15, 118, 110, 0.28);
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.12);
 }
 
 .segmento-cor {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
   display: inline-block;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(24, 32, 50, 0.15);
 }
 
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
   z-index: 1040;
 }
 

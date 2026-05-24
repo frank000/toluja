@@ -1,54 +1,102 @@
 .dashboard-card {
-  border-color: #e9ecef;
+  position: relative;
+  overflow: hidden;
+  min-height: 132px;
+  border: 1px solid rgba(221, 229, 223, 0.86) !important;
+  box-shadow: 0 16px 40px rgba(22, 32, 48, 0.08);
+}
+
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: var(--metric-color, var(--app-brand));
+}
+
+.dashboard-card::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--metric-color, var(--app-brand)) 12%, white);
+}
+
+.dashboard-card .card-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 132px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dashboard-card h4 {
+  font-size: clamp(1.75rem, 3vw, 2.45rem);
 }
 
 .dashboard-card--vendas {
-  border-left: 4px solid #0d6efd;
+  --metric-color: var(--app-brand);
 }
 
 .dashboard-card--pedidos {
-  border-left: 4px solid #6f42c1;
+  --metric-color: #7c3aed;
 }
 
 .dashboard-card--whatsapp {
-  border-left: 4px solid #198754;
+  --metric-color: #16a34a;
 }
 
 .chart-area {
-  height: 220px;
+  position: relative;
+  height: 260px;
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 0.65rem 0.4rem 0.35rem;
+  border-radius: 14px;
+  background:
+    linear-gradient(to top, rgba(104, 115, 134, 0.08) 1px, transparent 1px) 0 0 / 100% 25%,
+    #fbfcfb;
 }
 
 .chart-bar {
-  min-width: 34px;
-  flex: 1 0 34px;
-  max-width: 52px;
+  min-width: 38px;
+  flex: 1 0 38px;
+  max-width: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .chart-bar__fill {
   width: 100%;
-  min-height: 2px;
-  border-radius: 6px 6px 0 0;
+  min-height: 3px;
+  border-radius: 9px 9px 3px 3px;
   background: #adb5bd;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
 }
 
 .chart-bar__fill--vendas {
-  background: linear-gradient(180deg, #5fa8ff 0%, #0d6efd 100%);
+  background: linear-gradient(180deg, #2dd4bf 0%, var(--app-brand) 100%);
 }
 
 .chart-bar__fill--pedidos {
-  background: linear-gradient(180deg, #a98adf 0%, #6f42c1 100%);
+  background: linear-gradient(180deg, #fb923c 0%, #7c3aed 100%);
 }
 
 .chart-bar__label {
+  width: 100%;
+  overflow: hidden;
+  color: var(--app-muted);
   font-size: 0.68rem;
-  color: #6c757d;
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
