@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -17,25 +17,56 @@ export class LoginComponent {
   carregandoTenants = false;
   painelMode = false;
   tenants: Array<{ tenantId: string; nome: string }> = [];
+  tenantSelectAberto = false;
 
   form = this.fb.group({
     tenantId: ['default', Validators.required],
-    username: ['admin', Validators.required],
-    password: ['admin123', Validators.required]
+    username: ['', Validators.required],
+    password: ['', Validators.required]
   });
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router,
+    private elementRef: ElementRef<HTMLElement>
+  ) {
     this.carregarTenants();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
+      this.tenantSelectAberto = false;
+    }
+  }
+
+  get tenantsFiltrados(): Array<{ tenantId: string; nome: string }> {
+    const termo = (this.form.value.tenantId || '').trim().toLowerCase();
+    if (!termo) return this.tenants;
+    return this.tenants.filter((tenant) =>
+      tenant.tenantId.toLowerCase().includes(termo) || tenant.nome.toLowerCase().includes(termo)
+    );
   }
 
   togglePainelMode(): void {
     this.painelMode = !this.painelMode;
     this.erro = '';
     if (this.painelMode) {
-      this.form.patchValue({ tenantId: 'default', username: 'superadmin', password: '' });
+      this.form.patchValue({ tenantId: 'default', username: '', password: '' });
     } else {
-      this.form.patchValue({ username: 'admin' });
+      this.form.patchValue({ username: '', password: '' });
     }
+  }
+
+  onTenantInput(value: string): void {
+    this.form.patchValue({ tenantId: value });
+    this.tenantSelectAberto = true;
+  }
+
+  selecionarTenant(tenantId: string): void {
+    this.form.patchValue({ tenantId });
+    this.tenantSelectAberto = false;
   }
 
   submit(): void {

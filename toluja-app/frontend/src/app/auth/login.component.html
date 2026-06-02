@@ -13,9 +13,40 @@
       <form [formGroup]="form" (ngSubmit)="submit()" class="d-grid gap-3">
         <div *ngIf="!painelMode">
           <label class="form-label">Tenant</label>
-          <select class="form-select" formControlName="tenantId" [disabled]="carregandoTenants">
-            <option *ngFor="let tenant of tenants" [value]="tenant.tenantId">{{ tenant.tenantId }}</option>
-          </select>
+          <div class="tenant-combobox">
+            <input
+              class="form-control"
+              type="text"
+              formControlName="tenantId"
+              autocomplete="off"
+              [disabled]="carregandoTenants"
+              (focus)="tenantSelectAberto = true"
+              (input)="onTenantInput($any($event.target).value)"
+            />
+            <button
+              class="tenant-combobox-toggle"
+              type="button"
+              [disabled]="carregandoTenants"
+              (click)="tenantSelectAberto = !tenantSelectAberto"
+              aria-label="Listar tenants"
+            >
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="tenant-combobox-menu shadow-sm" *ngIf="tenantSelectAberto && !carregandoTenants">
+              <button
+                class="tenant-combobox-option"
+                type="button"
+                *ngFor="let tenant of tenantsFiltrados"
+                (click)="selecionarTenant(tenant.tenantId)"
+              >
+                <span>{{ tenant.tenantId }}</span>
+                <small>{{ tenant.nome }}</small>
+              </button>
+              <div class="tenant-combobox-empty" *ngIf="tenantsFiltrados.length === 0">
+                Nenhum tenant encontrado.
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <label class="form-label">Usuário</label>
